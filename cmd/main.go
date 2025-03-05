@@ -15,6 +15,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
 )
 
 // Carrega variáveis de ambiente do .env
@@ -44,8 +45,19 @@ func connectDatabase() *gorm.DB {
 
 func main() {
 	// Carregar variáveis de ambiente
-	loadEnv()
+	//loadEnv()
 
+	godotenv.Load(".env")
+
+	//teste1 := os.Getenv("JWT_SECRET")
+
+	teste2 := os.Getenv("JWT_SECRET")
+	teste3 := os.Getenv("DB_HOST")
+
+	println("-----------------------")
+	println(teste2 + " a outra")
+	println(teste3 + " a outra")
+	println("-----------------------")
 	// Verificar valores carregados
 	log.Println("📌 Configurações carregadas:")
 	log.Printf("🔹 DB_HOST: %s", getEnv("DB_HOST", "localhost"))

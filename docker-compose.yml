@@ -27,6 +27,8 @@ services:
       DB_NAME: 1mao
     ports:
       - "8080:8080"
+    env_file:
+      - .env
 
 volumes:
   postgres_data:
