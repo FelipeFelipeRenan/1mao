@@ -1,6 +1,7 @@
 package main
 
 import (
+	"1mao/internal/middleware"
 	"1mao/internal/user/delivery/httpa"
 	"1mao/internal/user/domain"
 	"1mao/internal/user/repository"
@@ -64,10 +65,15 @@ func main() {
 	authService := service.NewAuthService(userRepo)
 	userHandler := httpa.NewUserHandler(authService)
 
-	// Configuração do Router
+	// Configuração do Router (Rotas publicas)
 	router := mux.NewRouter()
 	router.HandleFunc("/register", userHandler.Register).Methods("POST")
 	router.HandleFunc("/login", userHandler.Login).Methods("POST")
+
+	// Rotas protegidas
+	authRouter := router.PathPrefix("/").Subrouter()
+	authRouter.Use(middleware.AuthMiddleware) // Aplicação do middleware
+	authRouter.HandleFunc("/me", userHandler.GetProfile).Methods("GET")
 
 	// Definir JWT_SECRET na variável de ambiente
 	token := os.Getenv("JWT_SECRET")
