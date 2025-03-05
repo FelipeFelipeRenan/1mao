@@ -7,18 +7,17 @@ import (
 	"net/http"
 )
 
-
 type UserHandler struct {
 	authService service.AuthService
 }
 
-func NewUserHandler(authService service.AuthService) *UserHandler{
+func NewUserHandler(authService service.AuthService) *UserHandler {
 	return &UserHandler{authService: authService}
 }
 
-func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request){
+func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var user domain.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
@@ -29,17 +28,17 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request){
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"message":"Usuário registrado com sucesso"})
+	json.NewEncoder(w).Encode(map[string]string{"message": "Usuário registrado com sucesso"})
 
 }
 
-func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request){
-	var creds struct{
-		Email string `json:"email"`
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var creds struct {
+		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
@@ -50,7 +49,6 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"token":token})
-
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
 
 }

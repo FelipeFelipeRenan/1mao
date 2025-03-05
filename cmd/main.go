@@ -15,7 +15,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-
 )
 
 // Carrega variáveis de ambiente do .env
@@ -69,7 +68,6 @@ func main() {
 	db := connectDatabase()
 	log.Println("✅ Conectado ao banco de dados com sucesso.")
 
-
 	defer func() {
 		if sqlDB, err := db.DB(); err == nil {
 			sqlDB.Close()
@@ -81,9 +79,9 @@ func main() {
 	if err := db.AutoMigrate(&domain.User{}); err != nil {
 		log.Fatal("Erro ao migrar modelo", err)
 	}
-	
+
 	log.Println("Tabela 'user' criada com sucesso")
-		
+
 	// Instanciar serviços
 	userRepo := repository.NewUserRepository(db)
 	authService := service.NewAuthService(userRepo)
