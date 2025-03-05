@@ -52,3 +52,19 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 
 }
+
+func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request){
+	userID, ok := r.Context().Value("userID").(uint)
+	if !ok{
+		http.Error(w, "Usuário não autenticado", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := h.authService.GetUserByID(userID)
+	if err != nil {
+		http.Error(w, "Usuário não encontrado", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(user)
+}

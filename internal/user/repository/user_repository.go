@@ -10,6 +10,7 @@ import (
 type UserRepository interface {
 	Create(user *domain.User) error
 	FindByEmail(email string) (*domain.User, error)
+	FindByID(userID uint) (*domain.User, error)
 }
 
 type userRepository struct {
@@ -29,5 +30,14 @@ func (r *userRepository) FindByEmail(email string) (*domain.User, error) {
 	if err := r.db.Where("email = ?", email).First(&user).Error; err != nil {
 		return nil, errors.New("usuario nao encontrado")
 	}
+	return &user, nil
+}
+
+func (r *userRepository) FindByID(userID uint) (*domain.User, error){
+	var user domain.User
+	if err := r.db.First(&user, userID).Error; err != nil{
+		return nil, err
+	}
+
 	return &user, nil
 }

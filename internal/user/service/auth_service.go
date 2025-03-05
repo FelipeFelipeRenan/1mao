@@ -14,6 +14,7 @@ import (
 type AuthService interface {
 	Register(user *domain.User) error
 	Login(email, password string) (string, error)
+	GetUserByID(userID uint) (*domain.User, error)
 }
 
 type authService struct {
@@ -64,3 +65,8 @@ func (s *authService) Login(email, password string) (string, error) {
 	return tokenString, nil
 
 }
+
+func (s *authService) GetUserByID(userID uint) (*domain.User, error){
+	return s.userRepo.FindByID(userID)
+}
+
