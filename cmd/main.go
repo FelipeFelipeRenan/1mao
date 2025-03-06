@@ -69,6 +69,7 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/register", userHandler.Register).Methods("POST")
 	router.HandleFunc("/login", userHandler.Login).Methods("POST")
+	router.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
 
 	// Rotas protegidas
 	authRouter := router.PathPrefix("/").Subrouter()

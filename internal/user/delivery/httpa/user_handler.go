@@ -68,3 +68,14 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request){
 
 	json.NewEncoder(w).Encode(user)
 }
+
+func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request){
+	users, err := h.authService.GetAllUsers()
+	if err != nil {
+		http.Error(w, "Erro ao buscar usuários", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
