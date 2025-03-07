@@ -72,10 +72,11 @@ func main() {
 	router.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
 	router.HandleFunc("/forgot-password", userHandler.ForgotPassword).Methods("POST")
 
-	// Rotas protegidas
-	authRouter := router.PathPrefix("/").Subrouter()
-	authRouter.Use(middleware.AuthMiddleware) // Aplicação do middleware
+	// Rotas protegidas para clientes
+	authRouter := router.PathPrefix("/client").Subrouter()
+	authRouter.Use(middleware.AuthMiddleware([]string{"client"})) // Apenas clientes podem acessar
 	authRouter.HandleFunc("/me", userHandler.GetProfile).Methods("GET")
+
 
 	// Definir JWT_SECRET na variável de ambiente
 	token := os.Getenv("JWT_SECRET")
