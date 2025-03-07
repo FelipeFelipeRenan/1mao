@@ -12,6 +12,7 @@ type UserRepository interface {
 	FindByEmail(email string) (*domain.User, error)
 	FindByID(userID uint) (*domain.User, error)
 	GetAllUsers() ([]domain.User, error)
+	UpdateUser(user *domain.User) error 
 }
 
 type userRepository struct {
@@ -46,8 +47,12 @@ func (r *userRepository) FindByID(userID uint) (*domain.User, error) {
 func (r *userRepository) GetAllUsers() ([]domain.User, error) {
 	var users []domain.User
 	result := r.db.Find(&users)
-	if result.Error != nil{
+	if result.Error != nil {
 		return nil, result.Error
 	}
 	return users, nil
+}
+
+func (r *userRepository) UpdateUser(user *domain.User) error {
+	return r.db.Save(user).Error
 }
