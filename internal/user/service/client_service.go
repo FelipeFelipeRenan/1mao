@@ -3,30 +3,46 @@ package service
 import (
 	"1mao/internal/user/domain"
 	"1mao/internal/user/repository"
+	"1mao/pkg/auth"
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService interface {
 	Register(user *domain.User) error
-	Login(email, password string) (string, error)
 	GetUserByID(userID uint) (*domain.User, error)
+	Login(email, password string) (string, error)
 	GetAllUsers() ([]domain.User, error)
 	ForgotPassword(email string) (string, error)
 }
 
 type authService struct {
 	userRepo repository.UserRepository
+	authSvc auth.AuthService
 }
 
+
 func NewAuthService(userRepo repository.UserRepository) AuthService {
-	return &authService{userRepo: userRepo}
+	clientRepo := &authService{userRepo: userRepo}
+	authSvc := auth.NewAuthService(clientRepo)
+	return &authService{userRepo: userRepo, authSvc: authSvc}
+}
+
+func (s *authService) FindByEmail(email string)(*auth.User, error){
+	user, err := s.userRepo.FindByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	return &auth.User{
+		ID: user.ID,
+		Email: user.Email,
+		Password: user.Password,
+		Role: string(user.Role),
+	}, nil
 }
 
 func (s *authService) Register(user *domain.User) error {
@@ -42,34 +58,6 @@ func (s *authService) Register(user *domain.User) error {
 	return s.userRepo.Create(user)
 }
 
-func (s *authService) Login(email, password string) (string, error) {
-	user, err := s.userRepo.FindByEmail(email)
-	if err != nil {
-		return "", errors.New("usuário ou senha inválidos")
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", errors.New("usuário ou senhas invalidos")
-	}
-
-	// criar token jwt
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"role":    user.Role,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	secretKey := os.Getenv("JWT_SECRET")
-	tokenString, err := token.SignedString([]byte(secretKey))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-
-}
-
 func (s *authService) GetUserByID(userID uint) (*domain.User, error) {
 	return s.userRepo.FindByID(userID)
 }
@@ -78,6 +66,9 @@ func (s *authService) GetAllUsers() ([]domain.User, error) {
 	return s.userRepo.GetAllUsers()
 }
 
+func (s *authService) Login(email, password string)(string, error){
+	return s.authSvc.Login(email, password)
+}
 func (s *authService) ForgotPassword(email string) (string, error){
 	
 	user, err := s.userRepo.FindByEmail(email)
