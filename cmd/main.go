@@ -70,7 +70,7 @@ func main() {
 	router.HandleFunc("/register", userHandler.Register).Methods("POST")
 	router.HandleFunc("/login", userHandler.Login).Methods("POST")
 	router.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
-	router.HandleFunc("/forgot-password", userHandler.ForgotPassword).Methods("POST")
+	// TODO router.HandleFunc("/forgot-password", userHandler.ForgotPassword).Methods("POST")
 
 	// Rotas protegidas para clientes
 	authRouter := router.PathPrefix("/client").Subrouter()
