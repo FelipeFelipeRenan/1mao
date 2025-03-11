@@ -69,3 +69,4 @@ func TestFindbyEmail_NotFound(t *testing.T){
 
 	mockRepo.AssertExpectations(t)
 }
+
