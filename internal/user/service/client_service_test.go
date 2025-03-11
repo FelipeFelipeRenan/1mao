@@ -3,6 +3,7 @@ package service
 import (
 	"1mao/internal/user/domain"
 	"1mao/internal/user/repository"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,5 +53,19 @@ func TestFindByEmail_Success(t *testing.T){
 	assert.NoError(t, err)
 
 	assert.Equal(t, expectedUser.Email, user.Email)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestFindbyEmail_NotFound(t *testing.T){
+	mockRepo := new(repository.MockUserRepository)
+	authService := NewAuthService(mockRepo)
+
+	mockRepo.On("FindByEmail", "naoexiste@email.com").Return(nil, errors.New("usuario nao encontrado"))
+
+	user, err := authService.FindByEmail("naoexiste@email.com")
+	
+	assert.Nil(t, user)
+	assert.Equal(t,"usuario nao encontrado", err.Error())
+
 	mockRepo.AssertExpectations(t)
 }
