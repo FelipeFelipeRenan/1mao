@@ -14,6 +14,7 @@ import (
 
 type AuthService interface {
 	Register(user *domain.User) error
+	FindByEmail(email string)(*auth.User, error)
 	GetUserByID(userID uint) (*domain.User, error)
 	Login(email, password string) (string, error)
 	GetAllUsers() ([]domain.User, error)
