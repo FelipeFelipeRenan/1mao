@@ -78,7 +78,7 @@ func sendLogToLoki(logData map[string]interface{}) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("Loki retornou status inesperado: %d", resp.StatusCode)
+		return fmt.Errorf("loki retornou status inesperado: %d", resp.StatusCode)
 	}
 
 	return nil

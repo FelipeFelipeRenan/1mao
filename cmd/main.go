@@ -68,6 +68,7 @@ func main() {
 	// Configuração do Router (Rotas publicas)
 	router := mux.NewRouter()
 	router.Use(middleware.LoggerMiddleware)
+	router.Use(middleware.RateLimitMiddleware)
 	router.HandleFunc("/register", userHandler.Register).Methods("POST")
 	router.HandleFunc("/login", userHandler.Login).Methods("POST")
 	router.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
