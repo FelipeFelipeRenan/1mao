@@ -1,10 +1,18 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
+
+var log = logrus.New()
+
+func init(){
+	log.SetFormatter(&logrus.JSONFormatter{})
+	log.SetLevel(logrus.InfoLevel)
+}
 
 func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -13,14 +21,12 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 
 		// Log formatado com metodo, rota, tempo de resposta e ip
-		log.Println("------------------------------------------------------------")
-		log.Printf("[%s] %s | %s |%s |%v",
-			r.Method,
-			r.RequestURI,
-			r.RemoteAddr,
-			r.UserAgent(),
-			time.Since(start),
-		)
-		log.Println("------------------------------------------------------------")
+		log.WithFields(logrus.Fields{
+			"method": r.Method,
+			"path": r.RequestURI,
+			"ip": r.RemoteAddr,
+			"user_agent": r.UserAgent(),
+			"duration": time.Since(start).String(),
+		}).Info("Acesso registrado")
 	})
 }
