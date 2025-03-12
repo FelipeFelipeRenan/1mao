@@ -67,6 +67,7 @@ func main() {
 
 	// Configuração do Router (Rotas publicas)
 	router := mux.NewRouter()
+	router.Use(middleware.LoggerMiddleware)
 	router.HandleFunc("/register", userHandler.Register).Methods("POST")
 	router.HandleFunc("/login", userHandler.Login).Methods("POST")
 	router.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
@@ -75,6 +76,7 @@ func main() {
 	// Rotas protegidas para clientes
 	authRouter := router.PathPrefix("/client").Subrouter()
 	authRouter.Use(middleware.AuthMiddleware([]string{"client"})) // Apenas clientes podem acessar
+	authRouter.Use(middleware.LoggerMiddleware)
 	authRouter.HandleFunc("/me", userHandler.GetProfile).Methods("GET")
 
 
