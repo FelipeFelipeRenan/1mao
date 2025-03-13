@@ -10,7 +10,7 @@ require (
 	gorm.io/gorm v1.25.12
 )
 
-require golang.org/x/time v0.11.0 // indirect
+require golang.org/x/time v0.11.0
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -33,6 +33,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/joho/godotenv v1.5.1
+	github.com/sony/gobreaker v1.0.0
 	golang.org/x/crypto v0.35.0
 	golang.org/x/text v0.22.0 // indirect
 )

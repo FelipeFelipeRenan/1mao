@@ -15,14 +15,14 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	//"gorm.io/gorm/logger"
 )
 
 // Conecta ao banco de dados e tenta criá-lo caso não exista
 func connectDatabase(host string, user string, password string, name string, port string, sslmode string) *gorm.DB {
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password,name, port, sslmode)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{/*Logger: logger.Default.LogMode(logger.Info)*/})
 	if err != nil {
 		log.Printf("❌ Erro ao conectar no banco de dados: %v", err)
 	}
@@ -69,6 +69,7 @@ func main() {
 	router := mux.NewRouter()
 	router.Use(middleware.LoggerMiddleware)
 	router.Use(middleware.RateLimitMiddleware)
+	router.Use(middleware.CircuitBreakerMiddleware)
 	router.HandleFunc("/register", userHandler.Register).Methods("POST")
 	router.HandleFunc("/login", userHandler.Login).Methods("POST")
 	router.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
@@ -78,6 +79,8 @@ func main() {
 	authRouter := router.PathPrefix("/client").Subrouter()
 	authRouter.Use(middleware.AuthMiddleware([]string{"client"})) // Apenas clientes podem acessar
 	authRouter.Use(middleware.LoggerMiddleware)
+	authRouter.Use(middleware.RateLimitMiddleware)
+	authRouter.Use(middleware.CircuitBreakerMiddleware)
 	authRouter.HandleFunc("/me", userHandler.GetProfile).Methods("GET")
 
 
