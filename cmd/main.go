@@ -1,6 +1,7 @@
 package main
 
 import (
+	"1mao/delivery/rest/handlers"
 	"1mao/internal/middleware"
 	"1mao/internal/user/delivery/httpa"
 	"1mao/internal/user/domain"
@@ -65,6 +66,7 @@ func main() {
 	authService := service.NewAuthService(userRepo)
 	userHandler := httpa.NewUserHandler(authService)
 
+	healthHandler := handlers.NewHealthHandler(db)
 	// Configuração do Router (Rotas publicas)
 	router := mux.NewRouter()
 	router.Use(middleware.LoggerMiddleware)
@@ -74,6 +76,10 @@ func main() {
 	router.HandleFunc("/login", userHandler.Login).Methods("POST")
 	router.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
 	// TODO router.HandleFunc("/forgot-password", userHandler.ForgotPassword).Methods("POST")
+
+	// Adicionando rotas de health check
+	router.HandleFunc("/health", healthHandler.HealthCheck).Methods("GET")
+	router.HandleFunc("/ready", healthHandler.ReadyCheck).Methods("GET")
 
 	// Rotas protegidas para clientes
 	authRouter := router.PathPrefix("/client").Subrouter()
