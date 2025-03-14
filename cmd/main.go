@@ -1,9 +1,7 @@
 package main
 
 import (
-	"1mao/delivery/rest"
-	"1mao/internal/middleware"
-	"1mao/internal/user/delivery/httpa"
+	routes "1mao/delivery/rest"
 	"1mao/internal/user/domain"
 	"1mao/internal/user/repository"
 	"1mao/internal/user/service"
@@ -12,7 +10,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -64,29 +61,9 @@ func main() {
 	// Instanciar serviços
 	userRepo := repository.NewUserRepository(db)
 	authService := service.NewAuthService(userRepo)
-	userHandler := httpa.NewUserHandler(authService)
 
-	healthHandler := rest.NewRouter(db)
-	
-	// Configuração do Router (Rotas publicas)
-	router := mux.NewRouter()
-	router.Use(middleware.LoggerMiddleware)
-	router.Use(middleware.RateLimitMiddleware)
-	router.Use(middleware.CircuitBreakerMiddleware)
-	router.HandleFunc("/register", userHandler.Register).Methods("POST")
-	router.HandleFunc("/login", userHandler.Login).Methods("POST")
-	router.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
-	// TODO router.HandleFunc("/forgot-password", userHandler.ForgotPassword).Methods("POST")
-
-	router.PathPrefix("/").Handler(healthHandler)
-	// Rotas protegidas para clientes
-	authRouter := router.PathPrefix("/client").Subrouter()
-	authRouter.Use(middleware.AuthMiddleware([]string{"client"})) // Apenas clientes podem acessar
-	authRouter.Use(middleware.LoggerMiddleware)
-	authRouter.Use(middleware.RateLimitMiddleware)
-	authRouter.Use(middleware.CircuitBreakerMiddleware)
-	authRouter.HandleFunc("/me", userHandler.GetProfile).Methods("GET")
-
+	// Configuração de rotas
+	router := routes.SetupRoutes(db, authService)
 
 	// Definir JWT_SECRET na variável de ambiente
 	token := os.Getenv("JWT_SECRET")

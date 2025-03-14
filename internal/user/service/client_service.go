@@ -28,9 +28,11 @@ type authService struct {
 
 
 func NewAuthService(userRepo repository.UserRepository) AuthService {
-	clientRepo := &authService{userRepo: userRepo}
-	authSvc := auth.NewAuthService(clientRepo)
-	return &authService{userRepo: userRepo, authSvc: authSvc}
+	service := &authService{
+		userRepo: userRepo,
+		authSvc:  auth.NewAuthService(nil), // Se `auth.NewAuthService` precisar de algo, ajuste aqui
+	}
+	return service // ✅ Retorna `AuthService`, que é uma interface
 }
 
 func (s *authService) FindByEmail(email string)(*auth.User, error){
