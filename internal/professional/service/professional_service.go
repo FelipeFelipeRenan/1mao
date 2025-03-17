@@ -17,8 +17,8 @@ type professionalService struct {
 	repo repository.ProfessionalRepository
 }
 
-func NewProfessionalService(repo *repository.ProfessionalRepository) ProfessionalService {
-	return &professionalService{repo: *repo}
+func NewProfessionalService(repo repository.ProfessionalRepository) ProfessionalService {
+	return &professionalService{repo: repo}
 }
 
 func (s *professionalService) Register(professional *domain.Professional) error {

@@ -20,9 +20,11 @@ func SetupRoutes(db *gorm.DB, authService service.AuthService) *mux.Router {
 
 	// Rota de health check
 	routes.HealthRoutes(router, db)	
-	
+	// Rota de profissionais
+	routes.ProfessionalRoutes(router, db)
 	// Rotas de usuário (autenticação e CRUD)
 	routes.UserRoutes(router, &authService)
 
 	return router
 }
+
