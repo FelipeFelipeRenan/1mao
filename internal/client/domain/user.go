@@ -13,7 +13,7 @@ const (
 	RoleProfessional Role = "professional"
 )
 
-type User struct {
+type Client struct {
 	gorm.Model
 	Name     string `gorm:"not null"`
 	Email    string `gorm:"unique;not null"`

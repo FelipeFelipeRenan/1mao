@@ -1,8 +1,8 @@
 package service
 
 import (
-	"1mao/internal/user/domain"
-	"1mao/internal/user/repository"
+	"1mao/internal/client/domain"
+	"1mao/internal/client/repository"
 	"1mao/pkg/auth"
 	"errors"
 	"fmt"
@@ -12,43 +12,57 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthService interface {
-	Register(user *domain.User) error
+type ClientService interface {
+	Register(user *domain.Client) error
 	FindByEmail(email string)(*auth.User, error)
-	GetUserByID(userID uint) (*domain.User, error)
+	GetUserByID(userID uint) (*domain.Client, error)
 	Login(email, password string) (string, error)
-	GetAllUsers() ([]domain.User, error)
+	GetAllUsers() ([]domain.Client, error)
 	ForgotPassword(email string) (string, error)
 }
 
-type authService struct {
+type clientService struct {
 	userRepo repository.UserRepository
 	authSvc auth.AuthService
 }
 
-
-func NewAuthService(userRepo repository.UserRepository) AuthService {
-	service := &authService{
-		userRepo: userRepo,
-		authSvc:  auth.NewAuthService(nil), // Se `auth.NewAuthService` precisar de algo, ajuste aqui
-	}
-	return service // ✅ Retorna `AuthService`, que é uma interface
+type clientAuthAdapter struct {
+	repo repository.UserRepository
 }
 
-func (s *authService) FindByEmail(email string)(*auth.User, error){
-	user, err := s.userRepo.FindByEmail(email)
+// Implementação para `FindByEmail`
+func (a *clientAuthAdapter) FindByEmail(email string) (*auth.User, error) {
+	user, err := a.repo.FindByEmail(email)
 	if err != nil {
 		return nil, err
 	}
 	return &auth.User{
-		ID: user.ID,
-		Email: user.Email,
+		ID:       user.ID,
+		Email:    user.Email,
 		Password: user.Password,
-		Role: string(user.Role),
 	}, nil
 }
 
-func (s *authService) Register(user *domain.User) error {
+func (s *clientService) FindByEmail(email string) (*auth.User, error) {
+	return s.authSvc.FindByEmail(email) // 🔹 Agora redireciona corretamente
+}
+
+
+
+func NewClientService(userRepo repository.UserRepository) ClientService {
+	authRepo := &clientAuthAdapter{repo: userRepo} // 🔹 Criamos o adapter
+	authSvc := auth.NewAuthService(authRepo, nil) // 🔹 Agora passamos o adapter para AuthService
+
+	return &clientService{
+		userRepo: userRepo,
+		authSvc:  authSvc,
+	}
+}
+
+// Adapter para conectar UserRepository ao AuthService
+
+
+func (s *clientService) Register(user *domain.Client) error {
 	// Hash da senha do usuario
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -61,18 +75,18 @@ func (s *authService) Register(user *domain.User) error {
 	return s.userRepo.Create(user)
 }
 
-func (s *authService) GetUserByID(userID uint) (*domain.User, error) {
+func (s *clientService) GetUserByID(userID uint) (*domain.Client, error) {
 	return s.userRepo.FindByID(userID)
 }
 
-func (s *authService) GetAllUsers() ([]domain.User, error) {
+func (s *clientService) GetAllUsers() ([]domain.Client, error) {
 	return s.userRepo.GetAllUsers()
 }
 
-func (s *authService) Login(email, password string)(string, error){
+func (s *clientService) Login(email, password string)(string, error){
 	return s.authSvc.Login(email, password)
 }
-func (s *authService) ForgotPassword(email string) (string, error){
+func (s *clientService) ForgotPassword(email string) (string, error){
 	
 	user, err := s.userRepo.FindByEmail(email)
 	if err != nil{

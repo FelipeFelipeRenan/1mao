@@ -1,8 +1,8 @@
 package service
 
 import (
-	"1mao/internal/user/domain"
-	"1mao/internal/user/repository"
+	"1mao/internal/client/domain"
+	"1mao/internal/client/repository"
 	"errors"
 	"testing"
 
@@ -20,9 +20,9 @@ func hashPassword(password string) string{
 
 func TestRegister_Sucess(t *testing.T){
 	mockRepo := new(repository.MockUserRepository)
-	authService := NewAuthService(mockRepo)
+	clientService := NewClientService(mockRepo)
 
-	user := &domain.User{
+	user := &domain.Client{
 		Email: "user@email.com",
 		Password: "senha123",
 		Role: "client",
@@ -30,7 +30,7 @@ func TestRegister_Sucess(t *testing.T){
 
 	mockRepo.On("Create", mock.AnythingOfType("*domain.User")).Return(nil)
 
-	err := authService.Register(user)
+	err := clientService.Register(user)
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 
@@ -38,9 +38,9 @@ func TestRegister_Sucess(t *testing.T){
 
 func TestFindByEmail_Success(t *testing.T){
 	mockRepo := new(repository.MockUserRepository)
-	authService := NewAuthService(mockRepo)
+	authService := NewClientService(mockRepo)
 
-	expectedUser := &domain.User{
+	expectedUser := &domain.Client{
 		Model: gorm.Model{ID: 1},
 		Email: "user@email.com",
 		Password: hashPassword("senha123"),
@@ -58,7 +58,7 @@ func TestFindByEmail_Success(t *testing.T){
 
 func TestFindbyEmail_NotFound(t *testing.T){
 	mockRepo := new(repository.MockUserRepository)
-	authService := NewAuthService(mockRepo)
+	authService := NewClientService(mockRepo)
 
 	mockRepo.On("FindByEmail", "naoexiste@email.com").Return(nil, errors.New("usuario nao encontrado"))
 

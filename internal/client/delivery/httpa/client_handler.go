@@ -1,22 +1,22 @@
 package httpa
 
 import (
-	"1mao/internal/user/domain"
-	"1mao/internal/user/service"
+	"1mao/internal/client/domain"
+	"1mao/internal/client/service"
 	"encoding/json"
 	"net/http"
 )
 
-type UserHandler struct {
-	authService service.AuthService
+type ClientHandler struct {
+	authService service.ClientService
 }
 
-func NewUserHandler(authService service.AuthService) *UserHandler {
-	return &UserHandler{authService: authService}
+func NewClientHandler(authService service.ClientService) *ClientHandler {
+	return &ClientHandler{authService: authService}
 }
 
-func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
-	var user domain.User
+func (h *ClientHandler) Register(w http.ResponseWriter, r *http.Request) {
+	var user domain.Client
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
@@ -28,11 +28,11 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Usuário registrado com sucesso"})
+	json.NewEncoder(w).Encode(user)
 
 }
 
-func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *ClientHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var creds struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -53,7 +53,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request){
+func (h *ClientHandler) GetProfile(w http.ResponseWriter, r *http.Request){
 	userID, ok := r.Context().Value("userID").(uint)
 	if !ok{
 		http.Error(w, "Usuário não autenticado", http.StatusUnauthorized)
@@ -69,7 +69,7 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(user)
 }
 
-func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request){
+func (h *ClientHandler) GetAllUsers(w http.ResponseWriter, r *http.Request){
 	users, err := h.authService.GetAllUsers()
 	if err != nil {
 		http.Error(w, "Erro ao buscar usuários", http.StatusInternalServerError)
@@ -80,7 +80,7 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(users)
 }
 
-func (h *UserHandler) ForgotPassword(w http.ResponseWriter, r *http.Request){
+func (h *ClientHandler) ForgotPassword(w http.ResponseWriter, r *http.Request){
 	var req struct {
 		Email string `json:"email"`
 	}

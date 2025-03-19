@@ -7,42 +7,49 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/gorilla/mux"
 )
 
-// AuthMiddleware agora aceita roles e retorna um mux.MiddlewareFunc
-func AuthMiddleware(roles []string) mux.MiddlewareFunc {
+type ContextKey string
+
+const UserContextKey ContextKey = "user"
+
+func AuthMiddleware(allowedRoles ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" {
-				http.Error(w, "Token não fornecido", http.StatusUnauthorized)
+			tokenHeader := r.Header.Get("Authorization")
+			if tokenHeader == "" {
+				http.Error(w, "Token não encontrado", http.StatusUnauthorized)
 				return
 			}
-			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-			secret := os.Getenv("JWT_SECRET")
 
-			token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-				return []byte(secret), nil
+			tokenParts := strings.Split(tokenHeader, " ")
+			if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+				http.Error(w, "Token mal formatado", http.StatusUnauthorized)
+				return
+			}
+
+			token, err := jwt.Parse(tokenParts[1], func(token *jwt.Token) (interface{}, error) {
+				return []byte(os.Getenv("JWT_SECRET")), nil
 			})
 
 			if err != nil || !token.Valid {
 				http.Error(w, "Token inválido", http.StatusUnauthorized)
 				return
 			}
+
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {
-				http.Error(w, "Erro ao processar token", http.StatusUnauthorized)
+				http.Error(w, "Token inválido", http.StatusUnauthorized)
 				return
 			}
 
-			userID := uint(claims["user_id"].(float64))
-			userRole := claims["role"].(string) // Supondo que a role esteja armazenada no token
+			role := claims["role"].(string)
+			log.Println("✅ Token válido para:", role)
 
-			// Verificar se a role do usuário é permitida para acessar a rota
+			// Verifica se o papel do usuário está na lista permitida
 			allowed := false
-			for _, role := range roles {
-				if role == userRole {
+			for _, allowedRole := range allowedRoles {
+				if role == allowedRole {
 					allowed = true
 					break
 				}
@@ -53,8 +60,7 @@ func AuthMiddleware(roles []string) mux.MiddlewareFunc {
 				return
 			}
 
-			// Adiciona o userID ao contexto da requisição
-			ctx := context.WithValue(r.Context(), "userID", userID)
+			ctx := context.WithValue(r.Context(), UserContextKey, claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

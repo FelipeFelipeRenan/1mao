@@ -2,9 +2,11 @@ package main
 
 import (
 	routes "1mao/delivery/rest"
-	"1mao/internal/user/domain"
-	"1mao/internal/user/repository"
-	"1mao/internal/user/service"
+	client "1mao/internal/client/domain"
+	"1mao/internal/client/repository"
+	"1mao/internal/client/service"
+	professional "1mao/internal/professional/domain"
+	
 	"fmt"
 	"log"
 	"net/http"
@@ -13,14 +15,14 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	//"gorm.io/gorm/logger"
+	"gorm.io/gorm/logger"
 )
 
 // Conecta ao banco de dados e tenta criá-lo caso não exista
 func connectDatabase(host string, user string, password string, name string, port string, sslmode string) *gorm.DB {
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password,name, port, sslmode)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{/*Logger: logger.Default.LogMode(logger.Info)*/})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 	if err != nil {
 		log.Printf("❌ Erro ao conectar no banco de dados: %v", err)
 	}
@@ -50,20 +52,23 @@ func main() {
 		}
 	}()
 
-	// Migrar tabelas
-	db.Migrator().DropTable(&domain.User{})
-	if err := db.AutoMigrate(&domain.User{}); err != nil {
-		log.Fatal("Erro ao migrar modelo", err)
+	if err := db.AutoMigrate(&client.Client{}); err != nil {
+		log.Fatal("Erro ao migrar modelo User:", err)
 	}
+	
+	if err := db.AutoMigrate(&professional.Professional{}); err != nil {
+		log.Fatal("Erro ao migrar modelo Professional:", err)
+	}
+	
 
 	log.Println("Tabela 'user' criada com sucesso")
 
 	// Instanciar serviços
 	userRepo := repository.NewUserRepository(db)
-	authService := service.NewAuthService(userRepo)
+	clientService := service.NewClientService(userRepo)
 
 	// Configuração de rotas
-	router := routes.SetupRoutes(db, authService)
+	router := routes.SetupRoutes(db, &clientService)
 
 	// Definir JWT_SECRET na variável de ambiente
 	token := os.Getenv("JWT_SECRET")
