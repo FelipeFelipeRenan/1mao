@@ -19,7 +19,7 @@ func hashPassword(password string) string{
 }
 
 func TestRegister_Sucess(t *testing.T){
-	mockRepo := new(repository.MockUserRepository)
+	mockRepo := new(repository.MockClientRepository)
 	clientService := NewClientService(mockRepo)
 
 	user := &domain.Client{
@@ -28,7 +28,7 @@ func TestRegister_Sucess(t *testing.T){
 		Role: "client",
 	}
 
-	mockRepo.On("Create", mock.AnythingOfType("*domain.User")).Return(nil)
+	mockRepo.On("Create", mock.AnythingOfType("*domain.Client")).Return(nil)
 
 	err := clientService.Register(user)
 	assert.NoError(t, err)
@@ -37,7 +37,7 @@ func TestRegister_Sucess(t *testing.T){
 }
 
 func TestFindByEmail_Success(t *testing.T){
-	mockRepo := new(repository.MockUserRepository)
+	mockRepo := new(repository.MockClientRepository)
 	authService := NewClientService(mockRepo)
 
 	expectedUser := &domain.Client{
@@ -57,7 +57,7 @@ func TestFindByEmail_Success(t *testing.T){
 }
 
 func TestFindbyEmail_NotFound(t *testing.T){
-	mockRepo := new(repository.MockUserRepository)
+	mockRepo := new(repository.MockClientRepository)
 	authService := NewClientService(mockRepo)
 
 	mockRepo.On("FindByEmail", "naoexiste@email.com").Return(nil, errors.New("usuario nao encontrado"))
@@ -65,7 +65,7 @@ func TestFindbyEmail_NotFound(t *testing.T){
 	user, err := authService.FindByEmail("naoexiste@email.com")
 	
 	assert.Nil(t, user)
-	assert.Equal(t,"usuario nao encontrado", err.Error())
+	assert.Equal(t, "usuário não encontrado", err.Error())
 
 	mockRepo.AssertExpectations(t)
 }

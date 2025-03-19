@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockUserRepository struct {
+type MockClientRepository struct {
   mock.Mock
 }
 
-func (m *MockUserRepository) FindByEmail(email string) (*domain.Client, error){
+func (m *MockClientRepository) FindByEmail(email string) (*domain.Client, error){
 	args := m.Called(email)
 	if args.Get(0) == nil{
 		return nil, args.Error(1)
@@ -18,12 +18,12 @@ func (m *MockUserRepository) FindByEmail(email string) (*domain.Client, error){
 	return args.Get(0).(*domain.Client), args.Error(1)
 }
 
-func (m *MockUserRepository) Create(user *domain.Client) error{
+func (m *MockClientRepository) Create(user *domain.Client) error{
 	args := m.Called(user)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) FindByID(userID uint) (*domain.Client, error){
+func (m *MockClientRepository) FindByID(userID uint) (*domain.Client, error){
 	args := m.Called(userID)
 	if args.Get(0) == nil{
 		return nil, args.Error(1)
@@ -31,12 +31,12 @@ func (m *MockUserRepository) FindByID(userID uint) (*domain.Client, error){
 	return args.Get(0).(*domain.Client), args.Error(1)
 }
 
-func (m *MockUserRepository) GetAllUsers()([]domain.Client, error){
+func (m *MockClientRepository) GetAllUsers()([]domain.Client, error){
 	args := m.Called()
 	return args.Get(0).([]domain.Client), args.Error(1)
 }
 
-func (m *MockUserRepository) UpdateUser(user *domain.Client) error{
+func (m *MockClientRepository) UpdateUser(user *domain.Client) error{
 	args := m.Called(user)
 	return args.Error(0)
 }
