@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"strings"
 
 	"net/http"
 	"time"
@@ -44,6 +45,12 @@ func init() {
 
 func CircuitBreakerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// ignorando o websocket
+		if strings.HasPrefix(r.URL.Path, "/ws/") {
+			next.ServeHTTP(w, r)
+			return
+		}
 		rw := &responseWriterWrapper{ResponseWriter: w}
 
 		_, err := cb.Execute(func() (interface{}, error) {

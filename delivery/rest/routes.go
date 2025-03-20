@@ -10,7 +10,7 @@ import (
 )
 
 // SetupRoutes configura todas as rotas do sistema
-func SetupRoutes(db *gorm.DB, authService *service.ClientService) *mux.Router {
+func SetupRoutes(db *gorm.DB, clientService *service.ClientService) *mux.Router {
 	router := mux.NewRouter()
 
 	// Middlewares globais
@@ -20,10 +20,12 @@ func SetupRoutes(db *gorm.DB, authService *service.ClientService) *mux.Router {
 
 	// Rota de health check
 	routes.HealthRoutes(router, db)	
+	// Rota de notificação
+	routes.RegisterNotificationRoutes(router)
 	// Rota de profissionais
 	routes.ProfessionalRoutes(router, db)
 	// Rotas de usuário (autenticação e CRUD)
-	routes.UserRoutes(router, authService)
+	routes.UserRoutes(router, clientService)
 
 	return router
 }
