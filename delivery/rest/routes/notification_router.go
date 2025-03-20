@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"1mao/delivery/rest/notification/handlers"
+	"1mao/delivery/rest/handlers"
 
 	"github.com/gorilla/mux"
 )
