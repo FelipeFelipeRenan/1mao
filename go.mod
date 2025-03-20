@@ -10,7 +10,10 @@ require (
 	gorm.io/gorm v1.25.12
 )
 
-require golang.org/x/time v0.11.0
+require (
+	github.com/gorilla/websocket v1.5.3
+	golang.org/x/time v0.11.0
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
