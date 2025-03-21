@@ -7,7 +7,7 @@ import (
 
 	client "1mao/internal/client/repository"
 	"1mao/internal/notification/websocket"
-	"1mao/internal/professional/repository"
+	professional "1mao/internal/professional/repository"
 
 	"github.com/gorilla/mux"
 	ws "github.com/gorilla/websocket"
@@ -19,8 +19,7 @@ var chatUpgrader = ws.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-// Manipulador de WebSocket para Chat
-func HandleChatWebSocket(w http.ResponseWriter, r *http.Request, db *gorm.DB, hub *websocket.Hub) {
+func HandleClientChatWebSocket(w http.ResponseWriter, r *http.Request, db *gorm.DB, hub *websocket.Hub){
 	vars := mux.Vars(r)
 	userID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -28,10 +27,33 @@ func HandleChatWebSocket(w http.ResponseWriter, r *http.Request, db *gorm.DB, hu
 		return
 	}
 
-	if !userExists(db, userID) {
-		http.Error(w, "Usuario nao encontrado", http.StatusNotFound)
+	if !clientExists(db, userID) {
+		http.Error(w, "Client nao encontrado", http.StatusNotFound)
 		return
 	}
+
+	handleChatWebSocket(w,r,userID, hub)
+}
+
+func HandleProfessionalChatWebSocket(w http.ResponseWriter, r *http.Request, db *gorm.DB, hub *websocket.Hub){
+	vars := mux.Vars(r)
+	userID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "ID inválido", http.StatusBadRequest)
+		return
+	}
+
+	if !professionalExists(db, userID) {
+		http.Error(w, "Profissional nao encontrado", http.StatusNotFound)
+		return
+	}
+
+	handleChatWebSocket(w,r,userID, hub)
+}
+
+
+// Manipulador de WebSocket para Chat
+func handleChatWebSocket(w http.ResponseWriter, r *http.Request,userID int, hub *websocket.Hub) {
 
 	conn, err := chatUpgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -51,17 +73,14 @@ func HandleChatWebSocket(w http.ResponseWriter, r *http.Request, db *gorm.DB, hu
 	go client.Write()
 }
 
-func userExists(db *gorm.DB, userID int) bool {
+func clientExists(db *gorm.DB, userID int) bool{
 	clientRepo := client.NewUserRepository(db)
-	professionalRepo := repository.NewProfessionalRepository(db)
+	_, err := clientRepo.FindByID(uint(userID))
+	return err == nil
+}
 
-	if _, err := clientRepo.FindByID(uint(userID)); err == nil {
-		return true
-	}
-
-	if _, err := professionalRepo.FindByID(uint(userID)); err == nil {
-		return true
-	}
-
-	return false
+func professionalExists(db *gorm.DB, userID int) bool{
+	clientRepo := professional.NewProfessionalRepository(db)
+	_, err := clientRepo.FindByID(uint(userID))
+	return err == nil
 }
