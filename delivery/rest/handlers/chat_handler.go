@@ -5,10 +5,13 @@ import (
 	"net/http"
 	"strconv"
 
+	client "1mao/internal/client/repository"
 	"1mao/internal/notification/websocket"
+	"1mao/internal/professional/repository"
 
 	"github.com/gorilla/mux"
 	ws "github.com/gorilla/websocket"
+	"gorm.io/gorm"
 )
 
 // Configuração do WebSocket
@@ -17,11 +20,16 @@ var chatUpgrader = ws.Upgrader{
 }
 
 // Manipulador de WebSocket para Chat
-func HandleChatWebSocket(w http.ResponseWriter, r *http.Request, hub *websocket.Hub) {
+func HandleChatWebSocket(w http.ResponseWriter, r *http.Request, db *gorm.DB, hub *websocket.Hub) {
 	vars := mux.Vars(r)
 	userID, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, "ID inválido", http.StatusBadRequest)
+		return
+	}
+
+	if !userExists(db, userID) {
+		http.Error(w, "Usuario nao encontrado", http.StatusNotFound)
 		return
 	}
 
@@ -41,4 +49,19 @@ func HandleChatWebSocket(w http.ResponseWriter, r *http.Request, hub *websocket.
 	// Inicia as goroutines para leitura e escrita
 	go client.Listen()
 	go client.Write()
+}
+
+func userExists(db *gorm.DB, userID int) bool {
+	clientRepo := client.NewUserRepository(db)
+	professionalRepo := repository.NewProfessionalRepository(db)
+
+	if _, err := clientRepo.FindByID(uint(userID)); err == nil {
+		return true
+	}
+
+	if _, err := professionalRepo.FindByID(uint(userID)); err == nil {
+		return true
+	}
+
+	return false
 }
