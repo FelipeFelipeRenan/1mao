@@ -22,6 +22,8 @@ func SetupRoutes(db *gorm.DB, clientService *service.ClientService) *mux.Router 
 	routes.HealthRoutes(router, db)	
 	// Rota de notificação
 	routes.RegisterNotificationRoutes(router)
+	// Rota de chat
+	routes.RegisterChatRoutes(router)
 	// Rota de profissionais
 	routes.ProfessionalRoutes(router, db)
 	// Rotas de usuário (autenticação e CRUD)

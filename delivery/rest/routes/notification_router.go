@@ -7,5 +7,5 @@ import (
 )
 
 func RegisterNotificationRoutes(r *mux.Router) {
-	r.HandleFunc("/ws/notifications", handlers.HandleWebSocket)
+	r.HandleFunc("/ws/notifications", handlers.HandleNotificationWebSocket)
 }
