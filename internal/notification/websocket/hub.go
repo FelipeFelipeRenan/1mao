@@ -2,20 +2,21 @@ package websocket
 
 import (
 	"fmt"
-	"1mao/internal/notification/domain"
 	"sync"
+
+	"1mao/internal/notification/domain"
 )
 
+// Hub gerencia as conexões WebSocket
 type Hub struct {
-	Clients    map[int]*Client
-	Broadcast  chan domain.Message
+	Clients    map[int]*Client  // Agora o índice é um `int` para IDs
+	Broadcast  chan domain.Message // Canal de mensagens
 	Register   chan *Client
 	Unregister chan *Client
-	mu         sync.Mutex
+	mu         sync.Mutex // Proteção contra concorrência
 }
 
-var H = NewHub()
-
+// Criar um novo Hub
 func NewHub() *Hub {
 	return &Hub{
 		Clients:    make(map[int]*Client),
@@ -25,6 +26,7 @@ func NewHub() *Hub {
 	}
 }
 
+// Método para rodar o Hub e gerenciar clientes e mensagens
 func (h *Hub) Run() {
 	for {
 		select {
@@ -32,7 +34,7 @@ func (h *Hub) Run() {
 			h.mu.Lock()
 			h.Clients[client.ID] = client
 			h.mu.Unlock()
-			fmt.Printf("✅ Cliente %d registrado no Hub\n", client.ID)
+			fmt.Printf("✅ Cliente %d registrado\n", client.ID)
 
 		case client := <-h.Unregister:
 			h.mu.Lock()
@@ -41,19 +43,19 @@ func (h *Hub) Run() {
 				close(client.Send)
 			}
 			h.mu.Unlock()
-			fmt.Printf("⛔ Cliente %d desconectado\n", client.ID)
+			fmt.Printf("🚪 Cliente %d desconectado\n", client.ID)
 
-		case message := <-h.Broadcast:
+		case msg := <-h.Broadcast:
+			fmt.Printf("📢 Broadcast: %d -> %d: %s\n", msg.SenderID, msg.ReceiverID, msg.Content)
+
+			// Encontrar o destinatário e enviar mensagem
 			h.mu.Lock()
-			receiver, exists := h.Clients[message.ReceiverID]
-			h.mu.Unlock()
-
-			if exists {
-				fmt.Printf("📤 Enviando mensagem de %d para %d: %s\n", message.SenderID, message.ReceiverID, message.Content)
-				receiver.Send <- message
+			if recipient, ok := h.Clients[msg.ReceiverID]; ok {
+				recipient.Send <- msg
 			} else {
-				fmt.Printf("⚠️ Cliente %d não está conectado, mensagem não enviada\n", message.ReceiverID)
+				fmt.Printf("⚠️ Cliente %d não está online\n", msg.ReceiverID)
 			}
+			h.mu.Unlock()
 		}
 	}
 }

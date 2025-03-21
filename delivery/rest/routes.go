@@ -2,8 +2,9 @@ package routes
 
 import (
 	"1mao/delivery/rest/routes"
-	"1mao/internal/middleware"
 	"1mao/internal/client/service"
+	"1mao/internal/middleware"
+	"1mao/internal/notification/websocket"
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -13,17 +14,20 @@ import (
 func SetupRoutes(db *gorm.DB, clientService *service.ClientService) *mux.Router {
 	router := mux.NewRouter()
 
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	// Middlewares globais
 	router.Use(middleware.LoggerMiddleware)
 	router.Use(middleware.RateLimitMiddleware)
 	router.Use(middleware.CircuitBreakerMiddleware)
 
 	// Rota de health check
-	routes.HealthRoutes(router, db)	
+	routes.HealthRoutes(router, db)
 	// Rota de notificação
 	routes.RegisterNotificationRoutes(router)
 	// Rota de chat
-	routes.RegisterChatRoutes(router)
+	routes.RegisterChatRoutes(router, hub)
 	// Rota de profissionais
 	routes.ProfessionalRoutes(router, db)
 	// Rotas de usuário (autenticação e CRUD)
@@ -31,4 +35,3 @@ func SetupRoutes(db *gorm.DB, clientService *service.ClientService) *mux.Router 
 
 	return router
 }
-

@@ -19,7 +19,6 @@ func (s *NotificationService) SendNotification(notification domain.Notification)
         SenderID:   notification.SenderID,
         ReceiverID: notification.ReceiverID,
         Content:    notification.Content,
-        Type:       "notification",
     }
 
     s.hub.Broadcast <- msg
