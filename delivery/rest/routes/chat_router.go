@@ -9,13 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// Registrar rotas do Chat
 func RegisterChatRoutes(r *mux.Router, db *gorm.DB, hub *websocket.Hub) {
-	r.HandleFunc("/ws/chat/client/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handlers.HandleClientChatWebSocket(w, r, db,hub) //  Agora o handler recebe o Hub
-	})
-
-	r.HandleFunc("/ws/chat/professional/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handlers.HandleProfessionalChatWebSocket(w, r, db, hub) // Rota para profissionais
+	r.HandleFunc("/ws/chat/{type}/{id}", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandleChatWebSocket(w, r, db, hub)
 	})
 }

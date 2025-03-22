@@ -1,62 +1,86 @@
 package websocket
 
 import (
-	
+	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
+	"log"
+	"time"
+
 	"1mao/internal/notification/domain"
+	"1mao/internal/notification/repository"
+
+	"github.com/gorilla/websocket"
 )
 
 // Estrutura do cliente WebSocket
 type Client struct {
-	ID   int
-	Conn *websocket.Conn
-	Send chan domain.Message // Canal para envio de mensagens
-	Hub  *Hub
+	ID         int
+	UserType   string
+	Conn       *websocket.Conn
+	Send       chan domain.Message
+	Hub        *Hub
+	Repo       *repository.MessageRepository
 }
 
 // Criar um novo cliente WebSocket
-func NewClient(id int, conn *websocket.Conn, hub *Hub) *Client {
+func NewClient(id int, userType string, conn *websocket.Conn, hub *Hub, repo *repository.MessageRepository) *Client {
 	return &Client{
-		ID:   id,
-		Conn: conn,
-		Send: make(chan domain.Message),
-		Hub:  hub,
+		ID:       id,
+		UserType: userType,
+		Conn:     conn,
+		Send:     make(chan domain.Message, 256),
+		Hub:      hub,
+		Repo:     repo,
 	}
 }
 
-// Método para escutar mensagens enviadas pelo cliente e repassá-las ao Hub
+// Método para ouvir mensagens do WebSocket
 func (c *Client) Listen() {
 	defer func() {
-		c.Hub.Unregister <- c // Remove o cliente do Hub ao desconectar
+		c.Hub.Unregister <- c
 		c.Conn.Close()
 	}()
 
 	for {
-		var msg domain.Message
-		err := c.Conn.ReadJSON(&msg) // Lendo JSON do cliente
+		_, msgData, err := c.Conn.ReadMessage()
 		if err != nil {
-			fmt.Println("❌ Erro ao ler mensagem do WebSocket:", err)
+			log.Println("❌ Erro ao ler mensagem:", err)
 			break
 		}
 
-		// Define o ID do remetente como o próprio cliente
-		msg.SenderID = c.ID
-		fmt.Printf("📩 Mensagem recebida de %d: %+v\n", c.ID, msg)
+		var msg domain.Message
+		err = json.Unmarshal(msgData, &msg)
+		if err != nil {
+			log.Println("❌ Erro ao decodificar mensagem:", err)
+			continue
+		}
 
-		// Enviar mensagem ao Hub para distribuição
+		// Definir remetente automaticamente
+		msg.SenderID = c.ID
+		msg.SenderType = c.UserType
+		msg.Timestamp = time.Now().UTC()
+
+		// Enviar mensagem para o hub
 		c.Hub.Broadcast <- msg
 	}
 }
 
-// Método para enviar mensagens ao cliente
+// Método para enviar mensagens para o WebSocket do cliente
 func (c *Client) Write() {
 	defer c.Conn.Close()
+
 	for msg := range c.Send {
-		err := c.Conn.WriteJSON(msg)
+		msgData, err := json.Marshal(msg)
 		if err != nil {
-			fmt.Println("❌ Erro ao enviar mensagem via WebSocket:", err)
+			log.Println("❌ Erro ao serializar mensagem:", err)
+			continue
+		}
+
+		err = c.Conn.WriteMessage(websocket.TextMessage, msgData)
+		if err != nil {
+			log.Println("❌ Erro ao enviar mensagem:", err)
 			break
 		}
+		fmt.Printf("📤 Mensagem enviada para %d (%s): %s\n", msg.ReceiverID, msg.ReceiverType, msg.Content)
 	}
 }
