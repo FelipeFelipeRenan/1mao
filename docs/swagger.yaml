@@ -1,0 +1,86 @@
+definitions:
+  1mao_internal_notification_domain.Message:
+    description: Estrutura completa de mensagem com metadados
+    properties:
+      content:
+        example: Olá, como posso ajudar?
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      receiver_id:
+        example: 2
+        type: integer
+      receiver_type:
+        enum:
+        - client
+        - professional
+        example: professional
+        type: string
+      sender_id:
+        example: 1
+        type: integer
+      sender_type:
+        enum:
+        - client
+        - professional
+        example: client
+        type: string
+      timestamp:
+        example: "2023-01-01T15:04:05Z"
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /chat/messages:
+    get:
+      description: Retorna o histórico de mensagens entre usuários
+      parameters:
+      - description: ID do remetente
+        example: 1
+        in: query
+        name: sender_id
+        required: true
+        type: integer
+      - description: Tipo do remetente
+        enum:
+        - client
+        - professional
+        in: query
+        name: sender_type
+        required: true
+        type: string
+      - description: ID do destinatário
+        example: 2
+        in: query
+        name: receiver_id
+        required: true
+        type: integer
+      - description: Tipo do destinatário
+        enum:
+        - client
+        - professional
+        in: query
+        name: receiver_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/1mao_internal_notification_domain.Message'
+            type: array
+      summary: Buscar mensagens de chat
+      tags:
+      - Chat
+swagger: "2.0"

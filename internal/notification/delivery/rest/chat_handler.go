@@ -1,10 +1,11 @@
-package handlers
+package rest
 
 import (
 	"encoding/json"
 	"net/http"
 	"strconv"
 
+	_ "1mao/internal/notification/domain"
 	"1mao/internal/notification/repository"
 )
 
@@ -18,7 +19,16 @@ func NewChatHandler(repo *repository.MessageRepository) *ChatHandler {
 	return &ChatHandler{MessageRepo: repo}
 }
 
-// GetChatMessages retorna o histórico de mensagens entre dois usuários
+// @Summary Buscar mensagens de chat
+// @Description Retorna o histórico de mensagens entre usuários
+// @Tags Chat
+// @Produce json
+// @Param sender_id query int true "ID do remetente" example(1)
+// @Param sender_type query string true "Tipo do remetente" Enums(client, professional)
+// @Param receiver_id query int true "ID do destinatário" example(2)
+// @Param receiver_type query string true "Tipo do destinatário" Enums(client, professional)
+// @Success 200 {array} domain.Message
+// @Router /chat/messages [get]
 func (h *ChatHandler) GetChatMessages(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 

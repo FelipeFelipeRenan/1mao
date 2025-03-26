@@ -5,23 +5,26 @@ import (
 	client "1mao/internal/client/domain"
 	"1mao/internal/client/repository"
 	"1mao/internal/client/service"
-	professional "1mao/internal/professional/domain"
 	chat "1mao/internal/notification/domain"
+	professional "1mao/internal/professional/domain"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	_ "1mao/docs" // ✅ Import ESSENCIAL
 )
 
 // Conecta ao banco de dados e tenta criá-lo caso não exista
 func connectDatabase(host string, user string, password string, name string, port string, sslmode string) *gorm.DB {
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password,name, port, sslmode)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password, name, port, sslmode)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 	if err != nil {
 		log.Printf("❌ Erro ao conectar no banco de dados: %v", err)
@@ -34,7 +37,7 @@ func main() {
 	// Carregar variáveis de ambiente
 
 	godotenv.Load(".env")
-	
+
 	db_host := os.Getenv("DB_HOST")
 	db_user := os.Getenv("DB_USER")
 	db_password := os.Getenv("DB_PASSWORD")
@@ -43,7 +46,7 @@ func main() {
 	db_sslmode := os.Getenv("DB_SSLMODE")
 
 	// Conectar ao banco de dados
-	db := connectDatabase(db_host, db_user,db_password, db_name, db_port, db_sslmode)
+	db := connectDatabase(db_host, db_user, db_password, db_name, db_port, db_sslmode)
 	log.Println("✅ Conectado ao banco de dados com sucesso.")
 
 	defer func() {
@@ -56,7 +59,7 @@ func main() {
 		log.Fatal("Erro ao migrar modelo User:", err)
 	}
 	log.Println("Tabela 'client' criada com sucesso")
-	
+
 	if err := db.AutoMigrate(&professional.Professional{}); err != nil {
 		log.Fatal("Erro ao migrar modelo Professional:", err)
 	}
@@ -66,7 +69,7 @@ func main() {
 		log.Fatal("Erro ao migrar modelo Professional:", err)
 	}
 	log.Println("Tabela 'message' criada com sucesso")
-	
+
 	// Instanciar serviços
 	userRepo := repository.NewUserRepository(db)
 	clientService := service.NewClientService(userRepo)
@@ -74,6 +77,15 @@ func main() {
 	// Configuração de rotas
 	router := routes.SetupRoutes(db, &clientService)
 
+	router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+		httpSwagger.DocExpansion("none"),
+	))
+
+	// Rota explícita para o doc.json
+	router.HandleFunc("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./docs/swagger.json")
+	})
 	// Definir JWT_SECRET na variável de ambiente
 	token := os.Getenv("JWT_SECRET")
 	os.Setenv("JWT_SECRET", token)

@@ -1,0 +1,123 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/chat/messages": {
+            "get": {
+                "description": "Retorna o histórico de mensagens entre usuários",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Buscar mensagens de chat",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "ID do remetente",
+                        "name": "sender_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "client",
+                            "professional"
+                        ],
+                        "type": "string",
+                        "description": "Tipo do remetente",
+                        "name": "sender_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "example": 2,
+                        "description": "ID do destinatário",
+                        "name": "receiver_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "client",
+                            "professional"
+                        ],
+                        "type": "string",
+                        "description": "Tipo do destinatário",
+                        "name": "receiver_type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/1mao_internal_notification_domain.Message"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "1mao_internal_notification_domain.Message": {
+            "description": "Estrutura completa de mensagem com metadados",
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "example": "Olá, como posso ajudar?"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "receiver_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "receiver_type": {
+                    "type": "string",
+                    "enum": [
+                        "client",
+                        "professional"
+                    ],
+                    "example": "professional"
+                },
+                "sender_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "sender_type": {
+                    "type": "string",
+                    "enum": [
+                        "client",
+                        "professional"
+                    ],
+                    "example": "client"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2023-01-01T15:04:05Z"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        }
+    }
+}
