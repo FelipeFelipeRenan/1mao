@@ -16,7 +16,12 @@ func RegisterChatRoutes(r *mux.Router, db *gorm.DB, hub *websocket.Hub) {
 		handlers.HandleChatWebSocket(w, r, db, hub)
 	})
 
-	chatHandler := rest.NewChatHandler(&repository.MessageRepository{})
+    // Criar o MessageRepository com o banco de dados
+    messageRepo := repository.NewMessageRepository(db)
 
-	r.HandleFunc("/chat/messages", chatHandler.GetChatMessages)
+    // Criar o ChatHandler com o MessageRepository
+    chatHandler := rest.NewChatHandler(messageRepo)
+
+    // Rota para buscar mensagens
+    r.HandleFunc("/chat/messages", chatHandler.GetChatMessages).Methods("GET")
 }
