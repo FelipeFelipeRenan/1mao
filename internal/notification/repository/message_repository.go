@@ -44,3 +44,6 @@ func (repo *MessageRepository) GetMessages(userID int, userType string, otherID 
 
 	return messages, nil
 }
+// Testes de conexão de websocket
+// {"sender_id": 1, "sender_type": "professional", "receiver_id": 3,"receiver_type": "client","content": "Olá!" }
+// {"sender_id": 3, "sender_type": "client", "receiver_id": 1,"receiver_type": "professional","content": "Tudo bem?" }

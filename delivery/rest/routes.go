@@ -37,6 +37,7 @@ func SetupRoutes(db *gorm.DB, clientService *service.ClientService) *mux.Router 
 	routes.ProfessionalRoutes(router, db)
 	// Rotas de usuário (autenticação e CRUD)
 	routes.UserRoutes(router, clientService)
+	
 
 	return router
 }
