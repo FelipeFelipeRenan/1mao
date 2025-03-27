@@ -69,6 +69,144 @@
                 }
             }
         },
+        "/client/login": {
+            "post": {
+                "description": "Autentica um cliente e retorna token JWT",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login de cliente",
+                "parameters": [
+                    {
+                        "description": "Credenciais de login",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_client_delivery_httpa.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpa.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Requisição inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Credenciais inválidas",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/client/me": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retorna os dados do cliente autenticado",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Obter perfil do cliente",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Client"
+                        }
+                    },
+                    "401": {
+                        "description": "Não autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/client/register": {
+            "post": {
+                "description": "Cria uma nova conta de cliente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Registrar novo cliente",
+                "parameters": [
+                    {
+                        "description": "Dados do cliente",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/httpa.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Client"
+                        }
+                    },
+                    "400": {
+                        "description": "Dados inválidos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/professional/login": {
             "post": {
                 "description": "Autentica um profissional e retorna um token JWT",
@@ -89,7 +227,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/httpa.LoginRequest"
+                            "$ref": "#/definitions/internal_professional_delivery_httpa.LoginRequest"
                         }
                     }
                 ],
@@ -257,6 +395,30 @@
         }
     },
     "definitions": {
+        "domain.Client": {
+            "description": "Modelo completo de cliente",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_login": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/domain.Role"
+                }
+            }
+        },
         "domain.Message": {
             "description": "Estrutura completa de mensagem com metadados",
             "type": "object",
@@ -340,7 +502,64 @@
                 }
             }
         },
-        "httpa.LoginRequest": {
+        "domain.Role": {
+            "type": "string",
+            "enum": [
+                "client",
+                "professional"
+            ],
+            "x-enum-varnames": [
+                "RoleClient",
+                "RoleProfessional"
+            ]
+        },
+        "httpa.LoginResponse": {
+            "description": "Retorno do endpoint de login contendo o token JWT",
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "httpa.RegisterRequest": {
+            "description": "Dados necessários para registrar um novo cliente",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "cliente@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "João Silva"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "senhaSegura123"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+5511999999999"
+                }
+            }
+        },
+        "internal_client_delivery_httpa.LoginRequest": {
+            "description": "Credenciais para autenticação do cliente",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "cliente@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "senhaSegura123"
+                }
+            }
+        },
+        "internal_professional_delivery_httpa.LoginRequest": {
             "description": "Credenciais para login de profissional",
             "type": "object",
             "properties": {

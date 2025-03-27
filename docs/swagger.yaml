@@ -1,4 +1,20 @@
 definitions:
+  domain.Client:
+    description: Modelo completo de cliente
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      last_login:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      role:
+        $ref: '#/definitions/domain.Role'
+    type: object
   domain.Message:
     description: Estrutura completa de mensagem com metadados
     properties:
@@ -58,7 +74,48 @@ definitions:
       verified:
         type: boolean
     type: object
-  httpa.LoginRequest:
+  domain.Role:
+    enum:
+    - client
+    - professional
+    type: string
+    x-enum-varnames:
+    - RoleClient
+    - RoleProfessional
+  httpa.LoginResponse:
+    description: Retorno do endpoint de login contendo o token JWT
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  httpa.RegisterRequest:
+    description: Dados necessários para registrar um novo cliente
+    properties:
+      email:
+        example: cliente@example.com
+        type: string
+      name:
+        example: João Silva
+        type: string
+      password:
+        example: senhaSegura123
+        type: string
+      phone:
+        example: "+5511999999999"
+        type: string
+    type: object
+  internal_client_delivery_httpa.LoginRequest:
+    description: Credenciais para autenticação do cliente
+    properties:
+      email:
+        example: cliente@example.com
+        type: string
+      password:
+        example: senhaSegura123
+        type: string
+    type: object
+  internal_professional_delivery_httpa.LoginRequest:
     description: Credenciais para login de profissional
     properties:
       email:
@@ -117,6 +174,95 @@ paths:
       summary: Buscar mensagens de chat
       tags:
       - Chat
+  /client/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica um cliente e retorna token JWT
+      parameters:
+      - description: Credenciais de login
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_client_delivery_httpa.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpa.LoginResponse'
+        "400":
+          description: Requisição inválida
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Credenciais inválidas
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login de cliente
+      tags:
+      - Auth
+  /client/me:
+    get:
+      description: Retorna os dados do cliente autenticado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Client'
+        "401":
+          description: Não autorizado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Obter perfil do cliente
+      tags:
+      - Clients
+  /client/register:
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova conta de cliente
+      parameters:
+      - description: Dados do cliente
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpa.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Client'
+        "400":
+          description: Dados inválidos
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erro interno
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Registrar novo cliente
+      tags:
+      - Clients
   /professional/{id}:
     get:
       description: Retorna os detalhes de um profissional específico
@@ -159,7 +305,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/httpa.LoginRequest'
+          $ref: '#/definitions/internal_professional_delivery_httpa.LoginRequest'
       produces:
       - application/json
       responses:
