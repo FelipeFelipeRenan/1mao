@@ -8,7 +8,7 @@ import (
 )
 
 // RegisterRequest define a estrutura para registro de clientes
-// @Description Dados necessários para registrar um novo cliente
+//	@Description	Dados necessários para registrar um novo cliente
 type RegisterRequest struct {
 	Name     string `json:"name" example:"João Silva"`
 	Email    string `json:"email" example:"cliente@example.com"`
@@ -17,22 +17,22 @@ type RegisterRequest struct {
 }
 
 // LoginRequest define a estrutura para login de clientes
-// @Description Credenciais para autenticação do cliente
+//	@Description	Credenciais para autenticação do cliente
 type LoginRequest struct {
 	Email    string `json:"email" example:"cliente@example.com"`
 	Password string `json:"password" example:"senhaSegura123"`
 }
 
 // LoginResponse define a estrutura da resposta do login
-// @Description Retorno do endpoint de login contendo o token JWT
+//	@Description	Retorno do endpoint de login contendo o token JWT
 type LoginResponse struct {
 	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }
 
 // ClientHandler lida com requisições de clientes
-// @title Client API
-// @version 1.0
-// @description API para gestão de clientes
+//	@title			Client API
+//	@version		1.0
+//	@description	API para gestão de clientes
 type ClientHandler struct {
 	authService service.ClientService
 }
@@ -43,16 +43,16 @@ func NewClientHandler(authService service.ClientService) *ClientHandler {
 
 
 // Register godoc
-// @Summary Registrar novo cliente
-// @Description Cria uma nova conta de cliente
-// @Tags Clients
-// @Accept json
-// @Produce json
-// @Param request body RegisterRequest true "Dados do cliente"
-// @Success 201 {object} domain.Client
-// @Failure 400 {object} map[string]string "Dados inválidos"
-// @Failure 500 {object} map[string]string "Erro interno"
-// @Router /client/register [post]
+//	@Summary		Registrar novo cliente
+//	@Description	Cria uma nova conta de cliente
+//	@Tags			Clients
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		RegisterRequest	true	"Dados do cliente"
+//	@Success		201		{object}	domain.Client
+//	@Failure		400		{object}	map[string]string	"Dados inválidos"
+//	@Failure		500		{object}	map[string]string	"Erro interno"
+//	@Router			/client/register [post]
 func (h *ClientHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var user domain.Client
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -71,16 +71,16 @@ func (h *ClientHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // Login godoc
-// @Summary Login de cliente
-// @Description Autentica um cliente e retorna token JWT
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body LoginRequest true "Credenciais de login"
-// @Success 200 {object} LoginResponse
-// @Failure 400 {object} map[string]string "Requisição inválida"
-// @Failure 401 {object} map[string]string "Credenciais inválidas"
-// @Router /client/login [post]
+//	@Summary		Login de cliente
+//	@Description	Autentica um cliente e retorna token JWT
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		LoginRequest	true	"Credenciais de login"
+//	@Success		200		{object}	LoginResponse
+//	@Failure		400		{object}	map[string]string	"Requisição inválida"
+//	@Failure		401		{object}	map[string]string	"Credenciais inválidas"
+//	@Router			/client/login [post]
 func (h *ClientHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var creds struct {
 		Email    string `json:"email"`
@@ -103,14 +103,14 @@ func (h *ClientHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetProfile godoc
-// @Summary Obter perfil do cliente
-// @Description Retorna os dados do cliente autenticado
-// @Tags Clients
-// @Security ApiKeyAuth
-// @Produce json
-// @Success 200 {object} domain.Client
-// @Failure 401 {object} map[string]string "Não autorizado"
-// @Router /client/me [get]
+//	@Summary		Obter perfil do cliente
+//	@Description	Retorna os dados do cliente autenticado
+//	@Tags			Clients
+//	@Security		ApiKeyAuth
+//	@Produce		json
+//	@Success		200	{object}	domain.Client
+//	@Failure		401	{object}	map[string]string	"Não autorizado"
+//	@Router			/client/me [get]
 func (h *ClientHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(uint)
 	if !ok {

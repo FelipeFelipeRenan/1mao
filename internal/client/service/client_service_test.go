@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 
@@ -41,7 +40,6 @@ func TestFindByEmail_Success(t *testing.T){
 	authService := NewClientService(mockRepo)
 
 	expectedUser := &domain.Client{
-		Model: gorm.Model{ID: 1},
 		Email: "user@email.com",
 		Password: hashPassword("senha123"),
 		Role: domain.RoleClient,

@@ -6,26 +6,18 @@ import (
 	"1mao/internal/client/repository"
 	"1mao/internal/client/service"
 	chat "1mao/internal/notification/domain"
-	professional "1mao/internal/professional/domain" 
+	professional "1mao/internal/professional/domain"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
-	httpSwagger "github.com/swaggo/http-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-
-	_ "1mao/docs"
-	// ✅ Import ESSENCIAL
 )
 
-var (
-    _ = client.Client{}
-    _ = professional.Professional{}
-)
 // Conecta ao banco de dados e tenta criá-lo caso não exista
 func connectDatabase(host string, user string, password string, name string, port string, sslmode string) *gorm.DB {
 
@@ -37,12 +29,11 @@ func connectDatabase(host string, user string, password string, name string, por
 	return db
 }
 
-//	@title		1Mao API
-//	@version	1.0
+// @title		1Mao API
+// @version	1.0
 func main() {
 
 	// Carregar variáveis de ambiente
-
 	godotenv.Load(".env")
 
 	db_host := os.Getenv("DB_HOST")
@@ -84,15 +75,6 @@ func main() {
 	// Configuração de rotas
 	router := routes.SetupRoutes(db, &clientService)
 
-	router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
-		httpSwagger.URL("/swagger/doc.json"),
-		httpSwagger.DocExpansion("none"),
-	))
-
-	// Rota explícita para o doc.json
-	router.HandleFunc("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./docs/swagger.json")
-	})
 	// Definir JWT_SECRET na variável de ambiente
 	token := os.Getenv("JWT_SECRET")
 	os.Setenv("JWT_SECRET", token)

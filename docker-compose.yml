@@ -11,6 +11,11 @@ services:
       - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     build: .
@@ -28,8 +33,10 @@ services:
     ports:
       - "${APP_PORT}:8080"
     env_file:
-      - .env
-
+       - .env
+    volumes:
+      - ./:/app
+     
   loki:
     image: grafana/loki:latest
     ports:
