@@ -34,8 +34,8 @@ services:
       - "${APP_PORT}:8080"
     env_file:
        - .env
-    volumes:
-      - ./:/app
+    #volumes:
+     # - ./:/app
      
   loki:
     image: grafana/loki:latest
