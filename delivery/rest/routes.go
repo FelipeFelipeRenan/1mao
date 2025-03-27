@@ -27,8 +27,6 @@ func SetupRoutes(db *gorm.DB, clientService *service.ClientService) *mux.Router 
 	router.Use(middleware.RateLimitMiddleware)
 	router.Use(middleware.CircuitBreakerMiddleware)
 
-	// Rota do Swagger
-	routes.SwaggerRoutes()
 	// Rota de health check
 	routes.HealthRoutes(router, db)
 	// Rota de notificação
@@ -40,8 +38,5 @@ func SetupRoutes(db *gorm.DB, clientService *service.ClientService) *mux.Router 
 	// Rotas de usuário (autenticação e CRUD)
 	routes.UserRoutes(router, clientService)
 
-	
-
 	return router
 }
-
