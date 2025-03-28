@@ -1,4 +1,16 @@
 definitions:
+  domain.BookingStatus:
+    enum:
+    - pending
+    - confirmed
+    - cancelled
+    - completed
+    type: string
+    x-enum-varnames:
+    - StatusPending
+    - StatusConfirmed
+    - StatusCancelled
+    - StatusCompleted
   domain.Client:
     description: Modelo completo de cliente
     properties:
@@ -125,11 +137,173 @@ definitions:
         example: sua_senha_secreta
         type: string
     type: object
+  service.BookingResponse:
+    properties:
+      client_id:
+        type: integer
+      created_at:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: integer
+      professional_id:
+        type: integer
+      service_id:
+        type: integer
+      start_time:
+        type: string
+      status:
+        $ref: '#/definitions/domain.BookingStatus'
+      updated_at:
+        type: string
+    type: object
+  service.CreateBookingRequest:
+    properties:
+      client_id:
+        type: integer
+      date:
+        type: string
+      end_time:
+        type: string
+      professional_id:
+        type: integer
+      service_id:
+        type: integer
+      start_time:
+        type: string
+    type: object
 info:
   contact: {}
   title: 1Mao API
   version: "1.0"
 paths:
+  /bookings:
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo agendamento entre cliente e profissional
+      parameters:
+      - description: Dados do agendamento
+        in: body
+        name: booking
+        required: true
+        schema:
+          $ref: '#/definitions/service.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Agendamento criado com sucesso
+          schema:
+            $ref: '#/definitions/service.BookingResponse'
+        "400":
+          description: Dados inválidos
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflito de horário
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erro interno
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Cria um novo agendamento
+      tags:
+      - Bookings
+  /bookings/{id}:
+    get:
+      description: Retorna os detalhes de um agendamento específico
+      parameters:
+      - description: ID do agendamento
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Agendamento encontrado
+          schema:
+            $ref: '#/definitions/service.BookingResponse'
+        "404":
+          description: Agendamento não encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Busca agendamento por ID
+      tags:
+      - Bookings
+  /bookings/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Atualiza o status de um agendamento existente
+      parameters:
+      - description: ID do agendamento
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Agendamento atualizado
+          schema:
+            $ref: '#/definitions/service.BookingResponse'
+        "400":
+          description: Transição de status inválida
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Atualiza status do agendamento
+      tags:
+      - Bookings
+  /bookings/professional:
+    get:
+      description: Retorna a lista de agendamentos de um profissional com filtros
+        opcionais
+      parameters:
+      - description: ID do profissional
+        in: query
+        name: professional_id
+        required: true
+        type: integer
+      - description: Data inicial (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: Data final (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      - description: Status (pending, confirmed, cancelled, completed)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de agendamentos
+          schema:
+            items:
+              $ref: '#/definitions/service.BookingResponse'
+            type: array
+      summary: Lista agendamentos do profissional
+      tags:
+      - Bookings
   /chat/messages:
     get:
       description: Retorna o histórico de mensagens entre usuários

@@ -15,6 +15,196 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/bookings": {
+            "post": {
+                "description": "Cria um novo agendamento entre cliente e profissional",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Cria um novo agendamento",
+                "parameters": [
+                    {
+                        "description": "Dados do agendamento",
+                        "name": "booking",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateBookingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Agendamento criado com sucesso",
+                        "schema": {
+                            "$ref": "#/definitions/service.BookingResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Dados inválidos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflito de horário",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/professional": {
+            "get": {
+                "description": "Retorna a lista de agendamentos de um profissional com filtros opcionais",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Lista agendamentos do profissional",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do profissional",
+                        "name": "professional_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Data inicial (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Data final (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status (pending, confirmed, cancelled, completed)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de agendamentos",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/service.BookingResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}": {
+            "get": {
+                "description": "Retorna os detalhes de um agendamento específico",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Busca agendamento por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do agendamento",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Agendamento encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/service.BookingResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Agendamento não encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/status": {
+            "put": {
+                "description": "Atualiza o status de um agendamento existente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Atualiza status do agendamento",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do agendamento",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Agendamento atualizado",
+                        "schema": {
+                            "$ref": "#/definitions/service.BookingResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Transição de status inválida",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/chat/messages": {
             "get": {
                 "description": "Retorna o histórico de mensagens entre usuários",
@@ -404,6 +594,21 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "domain.BookingStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "confirmed",
+                "cancelled",
+                "completed"
+            ],
+            "x-enum-varnames": [
+                "StatusPending",
+                "StatusConfirmed",
+                "StatusCancelled",
+                "StatusCompleted"
+            ]
+        },
         "domain.Client": {
             "description": "Modelo completo de cliente",
             "type": "object",
@@ -579,6 +784,61 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "example": "sua_senha_secreta"
+                }
+            }
+        },
+        "service.BookingResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "professional_id": {
+                    "type": "integer"
+                },
+                "service_id": {
+                    "type": "integer"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.BookingStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.CreateBookingRequest": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "professional_id": {
+                    "type": "integer"
+                },
+                "service_id": {
+                    "type": "integer"
+                },
+                "start_time": {
+                    "type": "string"
                 }
             }
         }
