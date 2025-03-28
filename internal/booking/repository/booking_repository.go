@@ -3,6 +3,7 @@ package repository
 import (
 	"1mao/internal/booking/domain"
 	professional "1mao/internal/professional/domain"
+	"errors"
 	"time"
 
 	"context"
@@ -12,6 +13,7 @@ import (
 
 type BookingRepository interface {
 	Create(ctx context.Context, booking *domain.Booking) error
+	GetByID(ctx context.Context, id uint) (*domain.Booking, error)
 	IsTimeSlotAvailable(ctx context.Context, professionalID uint, start, end time.Time) (bool, error)
 }
 
@@ -52,6 +54,22 @@ func (r *bookingRepository) Create(ctx context.Context, booking *domain.Booking)
 	booking.UpdatedAt = time.Now()
 
 	return r.db.WithContext(ctx).Create(booking).Error
+}
+
+func (r *bookingRepository) GetByID(ctx context.Context, id uint) (*domain.Booking, error){
+	var booking domain.Booking
+	err := r.db.WithContext(ctx).
+		Preload("Professional").
+		Preload("Client").
+		First(&booking, id).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound){
+			return nil, domain.ErrBookingNotFound
+		}
+		return nil, err
+	}
+	return &booking, nil
 }
 
 func (r *bookingRepository) IsTimeSlotAvailable(ctx context.Context, professionalID uint, start, end time.Time) (bool, error){
