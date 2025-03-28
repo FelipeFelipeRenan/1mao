@@ -18,4 +18,4 @@ After the successful instalation fo Swag, run the command to generate the swagge
 
 Run the command ```docker compose up --build``` to build and run the application
 
-access the url [link](http://localhost:8080/swagger/index.htm) to use Swagger documentation endpoints
+access the url [link](http://localhost:8080/swagger/index.html) to use Swagger documentation endpoints
