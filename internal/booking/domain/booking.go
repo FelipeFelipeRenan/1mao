@@ -1,14 +1,24 @@
 package domain
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type BookingStatus string
 
 const (
 	StatusPending   BookingStatus = "pending"
-	Statusconfirmed BookingStatus = "confirmed"
+	StatusConfirmed BookingStatus = "confirmed"
 	StatusCancelled BookingStatus = "cancelled"
 	StatusCompleted BookingStatus = "completed"
+)
+
+var (
+	ErrBookingNotFound         = errors.New("booking not found")
+	ErrTimeSlotUnavailable     = errors.New("time slot unavailable")
+	ErrInvalidStatusTransition = errors.New("invalid status transition")
+	ErrProfessionalUnavailable = errors.New("professional unavailable")
 )
 
 // Booking representa um usuário cliente do sistema
