@@ -14,6 +14,8 @@ import (
 type BookingRepository interface {
 	Create(ctx context.Context, booking *domain.Booking) error
 	GetByID(ctx context.Context, id uint) (*domain.Booking, error)
+	ListByProfessional(ctx context.Context, professionalID uint, from, to time.Time) ([]*domain.Booking, error)
+	ListByClient(ctx context.Context, clientID uint) ([]*domain.Booking, error)
 	IsTimeSlotAvailable(ctx context.Context, professionalID uint, start, end time.Time) (bool, error)
 }
 
@@ -56,7 +58,7 @@ func (r *bookingRepository) Create(ctx context.Context, booking *domain.Booking)
 	return r.db.WithContext(ctx).Create(booking).Error
 }
 
-func (r *bookingRepository) GetByID(ctx context.Context, id uint) (*domain.Booking, error){
+func (r *bookingRepository) GetByID(ctx context.Context, id uint) (*domain.Booking, error) {
 	var booking domain.Booking
 	err := r.db.WithContext(ctx).
 		Preload("Professional").
@@ -64,7 +66,7 @@ func (r *bookingRepository) GetByID(ctx context.Context, id uint) (*domain.Booki
 		First(&booking, id).Error
 
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound){
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domain.ErrBookingNotFound
 		}
 		return nil, err
@@ -72,13 +74,44 @@ func (r *bookingRepository) GetByID(ctx context.Context, id uint) (*domain.Booki
 	return &booking, nil
 }
 
-func (r *bookingRepository) IsTimeSlotAvailable(ctx context.Context, professionalID uint, start, end time.Time) (bool, error){
+func (r *bookingRepository) ListByProfessional(ctx context.Context, professionalID uint, from, to time.Time) ([]*domain.Booking, error) {
+	var bookings []*domain.Booking
+
+	query := r.db.WithContext(ctx).
+		Where("professional_id = ?", professionalID).
+		Preload("Client").
+		Preload("Service")
+
+	if !from.IsZero() {
+		query = query.Where("start_time >= ?", from)
+	}
+	if !to.IsZero() {
+		query = query.Where("end_time <= ?", to)
+	}
+
+	err := query.Order("start_time ASC").Find(&bookings).Error
+	return bookings, err
+
+}
+
+func (r *bookingRepository) ListByClient(ctx context.Context, clientID uint) ([]*domain.Booking, error) {
+	var bookings []*domain.Booking
+	err := r.db.WithContext(ctx).
+		Where("client_id = ?", clientID).
+		Preload("Professional").
+		Preload("Service").
+		Order("start_time DESC").
+		Find(&bookings).Error
+	return bookings, err
+}
+
+func (r *bookingRepository) IsTimeSlotAvailable(ctx context.Context, professionalID uint, start, end time.Time) (bool, error) {
 	var count int64
 
 	err := r.db.WithContext(ctx).Model(&domain.Booking{}).Where("professional_id = ?", professionalID).Where("status IN ?", []domain.BookingStatus{
 		domain.StatusPending,
 		domain.StatusConfirmed,
 	}).
-	Where("(start_time, end_time) OVERLAPS (?, ?)", start, end).Count(&count).Error
+		Where("(start_time, end_time) OVERLAPS (?, ?)", start, end).Count(&count).Error
 	return count == 0, err
 }
