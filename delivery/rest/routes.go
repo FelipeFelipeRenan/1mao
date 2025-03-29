@@ -2,9 +2,11 @@ package routes
 
 import (
 	"1mao/delivery/rest/routes"
-	"1mao/internal/client/service"
+	bookingRepository "1mao/internal/booking/repository"
+	bookingService "1mao/internal/booking/service"
+	clientService "1mao/internal/client/service"
 	"1mao/internal/middleware"
-	"1mao/internal/notification/repository"
+	notificationRepository "1mao/internal/notification/repository"
 	"1mao/internal/notification/websocket"
 
 	"github.com/gorilla/mux"
@@ -12,12 +14,13 @@ import (
 )
 
 // SetupRoutes configura todas as rotas do sistema
-func SetupRoutes(db *gorm.DB, clientService *service.ClientService) *mux.Router {
+func SetupRoutes(db *gorm.DB, clientService *clientService.ClientService) *mux.Router {
 	
 	router := mux.NewRouter()
 
 	// Criar repositório de mensagens
-	messageRepo := repository.NewMessageRepository(db)
+	messageRepo := notificationRepository.NewMessageRepository(db)
+	bookingService := bookingService.NewBookingService(bookingRepository.NewBookingRepository(db))
 
 	// Criar Hub com repositório de mensagens
 	hub := websocket.NewHub(messageRepo)
@@ -40,6 +43,8 @@ func SetupRoutes(db *gorm.DB, clientService *service.ClientService) *mux.Router 
 	routes.ProfessionalRoutes(router, db)
 	// Rotas de usuário (autenticação e CRUD)
 	routes.UserRoutes(router, clientService)
+	// Rotas de agendamento
+	routes.BookingRoutes(router, bookingService)
 
 	return router
 }

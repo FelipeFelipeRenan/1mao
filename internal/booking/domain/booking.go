@@ -32,8 +32,6 @@ type Booking struct {
 	ID            uint          `json:"id" gorm:"primaryKey"`
 	ProfessinalID uint          `json:"professional_id"`
 	ClientID      uint          `json:"client_id"`
-	ServiceID     uint          `json:"service_id"`
-	Date          time.Time     `json:"date"`
 	StartTime     time.Time     `json:"start_time"`
 	EndTime       time.Time     `json:"end_time"`
 	Status        BookingStatus `json:"status"`

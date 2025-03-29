@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/bookings": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Cria um novo agendamento entre cliente e profissional",
                 "consumes": [
                     "application/json"
@@ -41,56 +46,53 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Agendamento criado com sucesso",
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/service.BookingResponse"
                         }
                     },
                     "400": {
-                        "description": "Dados inválidos",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "409": {
-                        "description": "Conflito de horário",
+                        "description": "Conflict",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Erro interno",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/bookings/professional": {
+        "/bookings/client": {
             "get": {
-                "description": "Retorna a lista de agendamentos de um profissional com filtros opcionais",
+                "description": "Retorna a lista de agendamentos de um cliente específico",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Lista agendamentos do profissional",
+                "summary": "Lista agendamentos do cliente",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID do profissional",
-                        "name": "professional_id",
+                        "description": "ID do cliente",
+                        "name": "client_id",
                         "in": "query",
                         "required": true
                     },
@@ -108,19 +110,85 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Status (pending, confirmed, cancelled, completed)",
+                        "description": "Status do agendamento",
                         "name": "status",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Lista de agendamentos",
+                        "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/service.BookingResponse"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/professional": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retorna a lista de agendamentos de um profissional",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Lista agendamentos do profissional",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Data inicial (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Data final (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status do agendamento",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/service.BookingResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -128,6 +196,11 @@ const docTemplate = `{
         },
         "/bookings/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retorna os detalhes de um agendamento específico",
                 "produces": [
                     "application/json"
@@ -135,7 +208,7 @@ const docTemplate = `{
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Busca agendamento por ID",
+                "summary": "Obtém um agendamento",
                 "parameters": [
                     {
                         "type": "integer",
@@ -147,18 +220,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Agendamento encontrado",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/service.BookingResponse"
                         }
                     },
-                    "404": {
-                        "description": "Agendamento não encontrado",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -166,6 +242,11 @@ const docTemplate = `{
         },
         "/bookings/{id}/status": {
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Atualiza o status de um agendamento existente",
                 "consumes": [
                     "application/json"
@@ -184,22 +265,34 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Novo status",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateStatusRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Agendamento atualizado",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/service.BookingResponse"
                         }
                     },
                     "400": {
-                        "description": "Transição de status inválida",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -726,6 +819,24 @@ const docTemplate = `{
                 "RoleClient",
                 "RoleProfessional"
             ]
+        },
+        "handlers.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "description": "Mensagem de erro\n@Example Resource not found",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateStatusRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "Novo status do agendamento\n@Enum pending,confirmed,cancelled,completed\n@Example confirmed",
+                    "type": "string"
+                }
+            }
         },
         "httpa.LoginResponse": {
             "description": "Retorno do endpoint de login contendo o token JWT",

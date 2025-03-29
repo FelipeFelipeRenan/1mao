@@ -25,7 +25,6 @@ func TestCreateBooking_Success(t *testing.T) {
 	req := &service.CreateBookingRequest{
 		ProfessionalID: 1,
 		ClientID:       1,
-		ServiceID:      1,
 		StartTime:      startTime,
 		EndTime:        endTime,
 	}
@@ -42,7 +41,6 @@ func TestCreateBooking_Success(t *testing.T) {
 		ID:            1,
 		ProfessinalID: 1,
 		ClientID:      1,
-		ServiceID:     1,
 		StartTime:     startTime,
 		EndTime:       endTime,
 		Status:        domain.StatusPending,

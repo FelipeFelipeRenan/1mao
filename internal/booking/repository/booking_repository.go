@@ -4,6 +4,7 @@ import (
 	"1mao/internal/booking/domain"
 	professional "1mao/internal/professional/domain"
 	"errors"
+	"fmt"
 	"time"
 
 	"context"
@@ -24,7 +25,6 @@ type BookingRepository interface {
 type CreateBookingRequest struct {
 	ProfessionalID uint      `json:"professional_id"`
 	ClientID       uint      `json:"client_id"`
-	ServiceID      uint      `json:"service_id"`
 	StartTime      time.Time `json:"start_time"`
 	EndTime        time.Time `json:"end_time"`
 }
@@ -63,7 +63,6 @@ func (r *bookingRepository) Create(ctx context.Context, req *CreateBookingReques
 	booking := &domain.Booking{
 		ProfessinalID: req.ProfessionalID,
 		ClientID:      req.ClientID,
-		ServiceID:     req.ServiceID,
 		StartTime:     req.StartTime,
 		EndTime:       req.EndTime,
 		Status:        domain.StatusPending,
@@ -71,6 +70,9 @@ func (r *bookingRepository) Create(ctx context.Context, req *CreateBookingReques
 		UpdatedAt:     time.Now(),
 	}
 
+	fmt.Println("----------------")
+	fmt.Println(booking)
+	fmt.Println("----------------")
 	err := r.db.WithContext(ctx).Create(booking).Error
 	return booking, err
 }
@@ -78,8 +80,6 @@ func (r *bookingRepository) Create(ctx context.Context, req *CreateBookingReques
 func (r *bookingRepository) GetByID(ctx context.Context, id uint) (*domain.Booking, error) {
 	var booking domain.Booking
 	err := r.db.WithContext(ctx).
-		Preload("Professional").
-		Preload("Client").
 		First(&booking, id).Error
 
 	if err != nil {
@@ -95,9 +95,8 @@ func (r *bookingRepository) ListByProfessional(ctx context.Context, professional
 	var bookings []*domain.Booking
 
 	query := r.db.WithContext(ctx).
-		Where("professional_id = ?", professionalID).
-		Preload("Client").
-		Preload("Service")
+		Where("professional_id = ?", professionalID)
+
 
 	if !from.IsZero() {
 		query = query.Where("start_time >= ?", from)
@@ -115,8 +114,6 @@ func (r *bookingRepository) ListByClient(ctx context.Context, clientID uint) ([]
 	var bookings []*domain.Booking
 	err := r.db.WithContext(ctx).
 		Where("client_id = ?", clientID).
-		Preload("Professional").
-		Preload("Service").
 		Order("start_time DESC").
 		Find(&bookings).Error
 	return bookings, err

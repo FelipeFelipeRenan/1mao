@@ -7,6 +7,8 @@ import (
 	"1mao/internal/client/service"
 	chat "1mao/internal/notification/domain"
 	professional "1mao/internal/professional/domain"
+	booking "1mao/internal/booking/domain"
+
 	"fmt"
 	"log"
 	"net/http"
@@ -54,7 +56,7 @@ func main() {
 	}()
 
 	if err := db.AutoMigrate(&client.Client{}); err != nil {
-		log.Fatal("Erro ao migrar modelo User:", err)
+		log.Fatal("Erro ao migrar modelo Client:", err)
 	}
 	log.Println("Tabela 'client' criada com sucesso")
 
@@ -64,9 +66,14 @@ func main() {
 	log.Println("Tabela 'professional' criada com sucesso")
 
 	if err := db.AutoMigrate(&chat.Message{}); err != nil {
-		log.Fatal("Erro ao migrar modelo Professional:", err)
+		log.Fatal("Erro ao migrar modelo Message:", err)
 	}
 	log.Println("Tabela 'message' criada com sucesso")
+	if err := db.AutoMigrate(&booking.Booking{}); err != nil {
+		log.Fatal("Erro ao migrar modelo Booking:", err)
+	}
+	log.Println("Tabela 'booking' criada com sucesso")
+
 
 	// Instanciar serviços
 	userRepo := repository.NewUserRepository(db)

@@ -9,7 +9,6 @@ import (
 )
 
 // BookingService define os serviços disponíveis para agendamentos
-// @Service
 type BookingService interface {
 	CreateBooking(ctx context.Context, req *CreateBookingRequest) (*BookingResponse, error)
 	GetBooking(ctx context.Context, id uint) (*BookingResponse, error)
@@ -33,8 +32,6 @@ func NewBookingService(bookingRepo repository.BookingRepository) BookingService 
 type CreateBookingRequest struct {
 	ProfessionalID uint      `json:"professional_id"`
 	ClientID       uint      `json:"client_id"`
-	ServiceID      uint      `json:"service_id"`
-	Date           time.Time `json:"date"`
 	StartTime      time.Time `json:"start_time"`
 	EndTime        time.Time `json:"end_time"`
 }
@@ -61,18 +58,6 @@ type BookingFilters struct {
 	Status domain.BookingStatus
 }
 
-// Cria um novo agendamento
-// @Summary Cria um novo agendamento
-// @Description Cria um novo agendamento entre cliente e profissional
-// @Tags Bookings
-// @Accept json
-// @Produce json
-// @Param booking body CreateBookingRequest true "Dados do agendamento"
-// @Success 201 {object} BookingResponse "Agendamento criado com sucesso"
-// @Failure 400 {object} map[string]string "Dados inválidos"
-// @Failure 409 {object} map[string]string "Conflito de horário"
-// @Failure 500 {object} map[string]string "Erro interno"
-// @Router /bookings [post]
 func (s *bookingService) CreateBooking(ctx context.Context, req *CreateBookingRequest) (*BookingResponse, error) {
 
 	// validação basica
@@ -100,7 +85,6 @@ func (s *bookingService) CreateBooking(ctx context.Context, req *CreateBookingRe
 	booking, err := s.bookingRepo.Create(ctx, &repository.CreateBookingRequest{
 		ProfessionalID: req.ProfessionalID,
 		ClientID:       req.ClientID,
-		ServiceID:      req.ServiceID,
 		StartTime:      req.StartTime,
 		EndTime:        req.EndTime,
 	})
@@ -111,15 +95,6 @@ func (s *bookingService) CreateBooking(ctx context.Context, req *CreateBookingRe
 
 }
 
-// Busca um agendamento por ID
-// @Summary Busca agendamento por ID
-// @Description Retorna os detalhes de um agendamento específico
-// @Tags Bookings
-// @Produce json
-// @Param id path int true "ID do agendamento"
-// @Success 200 {object} BookingResponse "Agendamento encontrado"
-// @Failure 404 {object} map[string]string "Agendamento não encontrado"
-// @Router /bookings/{id} [get]
 func (s *bookingService) GetBooking(ctx context.Context, id uint) (*BookingResponse, error) {
 	bookings, err := s.bookingRepo.GetByID(ctx, id)
 	if err != nil {
@@ -128,17 +103,6 @@ func (s *bookingService) GetBooking(ctx context.Context, id uint) (*BookingRespo
 	return s.toResponse(bookings), nil
 }
 
-// Lista agendamentos de um profissional
-// @Summary Lista agendamentos do profissional
-// @Description Retorna a lista de agendamentos de um profissional com filtros opcionais
-// @Tags Bookings
-// @Produce json
-// @Param professional_id query int true "ID do profissional"
-// @Param from query string false "Data inicial (YYYY-MM-DD)"
-// @Param to query string false "Data final (YYYY-MM-DD)"
-// @Param status query string false "Status (pending, confirmed, cancelled, completed)"
-// @Success 200 {array} BookingResponse "Lista de agendamentos"
-// @Router /bookings/professional [get]
 func (s *bookingService) ListProfessionalBookings(ctx context.Context, professionalID uint, filters *BookingFilters) ([]*BookingResponse, error) {
 	var from, to time.Time
 	var status domain.BookingStatus
@@ -177,16 +141,6 @@ func (s *bookingService) ListClientBookings(ctx context.Context, clientID uint) 
 	return s.toListResponse(bookings), nil
 }
 
-// Atualiza o status de um agendamento
-// @Summary Atualiza status do agendamento
-// @Description Atualiza o status de um agendamento existente
-// @Tags Bookings
-// @Accept json
-// @Produce json
-// @Param id path int true "ID do agendamento"
-// @Success 200 {object} BookingResponse "Agendamento atualizado"
-// @Failure 400 {object} map[string]string "Transição de status inválida"
-// @Router /bookings/{id}/status [put]
 func (s *bookingService) UpdateBookingStatus(ctx context.Context, id uint, status domain.BookingStatus) (*BookingResponse, error) {
 	booking, err := s.bookingRepo.UpdateStatus(ctx, id, status)
 	if err != nil {
@@ -206,7 +160,6 @@ func (s *bookingService) toResponse(booking *domain.Booking) *BookingResponse {
 		ID:             booking.ID,
 		ProfessionalID: booking.ProfessinalID,
 		ClientID:       booking.ClientID,
-		ServiceID:      booking.ServiceID,
 		StartTime:      booking.StartTime,
 		EndTime:        booking.EndTime,
 		Status:         booking.Status,
