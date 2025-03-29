@@ -30,7 +30,7 @@ var (
 //	@model			Booking
 type Booking struct {
 	ID            uint          `json:"id" gorm:"primaryKey"`
-	ProfessinalID uint          `json:"professional_id"`
+    ProfessionalID uint          `json:"professional_id" gorm:"column:professional_id"`  // Corrigido aqui
 	ClientID      uint          `json:"client_id"`
 	StartTime     time.Time     `json:"start_time"`
 	EndTime       time.Time     `json:"end_time"`

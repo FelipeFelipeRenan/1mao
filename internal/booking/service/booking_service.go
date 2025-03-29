@@ -42,7 +42,6 @@ type BookingResponse struct {
 	ID             uint                 `json:"id"`
 	ProfessionalID uint                 `json:"professional_id"`
 	ClientID       uint                 `json:"client_id"`
-	ServiceID      uint                 `json:"service_id"`
 	StartTime      time.Time            `json:"start_time"`
 	EndTime        time.Time            `json:"end_time"`
 	Status         domain.BookingStatus `json:"status"`
@@ -158,7 +157,7 @@ func (s *bookingService) CancelBooking(ctx context.Context, id uint) error {
 func (s *bookingService) toResponse(booking *domain.Booking) *BookingResponse {
 	return &BookingResponse{
 		ID:             booking.ID,
-		ProfessionalID: booking.ProfessinalID,
+		ProfessionalID: booking.ProfessionalID,
 		ClientID:       booking.ClientID,
 		StartTime:      booking.StartTime,
 		EndTime:        booking.EndTime,

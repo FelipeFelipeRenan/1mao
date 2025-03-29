@@ -4,6 +4,7 @@ import (
 	"1mao/internal/booking/domain"
 	"1mao/internal/booking/service"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -31,7 +32,7 @@ type BookingHandler struct {
 	decoder        *schema.Decoder
 }
 
-func NewBookingService(bookingService service.BookingService) *BookingHandler {
+func NewBookingHandler(bookingService service.BookingService) *BookingHandler {
 	return &BookingHandler{bookingService: bookingService, decoder: schema.NewDecoder()}
 }
 
@@ -50,25 +51,25 @@ func NewBookingService(bookingService service.BookingService) *BookingHandler {
 // @Failure 500 {object} ErrorResponse
 // @Router /bookings [post]
 func (h *BookingHandler) CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
-    var req service.CreateBookingRequest
-    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-        respondWithError(w, http.StatusBadRequest, "Invalid request payload")
-        return
-    }
+	var req service.CreateBookingRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
 
-    // Validação básica
-    if req.ProfessionalID == 0 || req.ClientID == 0 {
-        respondWithError(w, http.StatusBadRequest, "professional_id and client_id are required")
-        return
-    }
+	// Validação básica
+	if req.ProfessionalID == 0 || req.ClientID == 0 {
+		respondWithError(w, http.StatusBadRequest, "professional_id and client_id are required")
+		return
+	}
 
-    booking, err := h.bookingService.CreateBooking(r.Context(), &req)
-    if err != nil {
-        handleServiceError(w, err)
-        return
-    }
+	booking, err := h.bookingService.CreateBooking(r.Context(), &req)
+	if err != nil {
+		handleServiceError(w, err)
+		return
+	}
 
-    respondWithJSON(w, http.StatusCreated, booking)
+	respondWithJSON(w, http.StatusCreated, booking)
 }
 
 // GetBookingHandler obtém um agendamento por ID
@@ -111,32 +112,32 @@ func (h *BookingHandler) GetBookingHandler(w http.ResponseWriter, r *http.Reques
 // @Failure 401 {object} ErrorResponse
 // @Router /bookings/professional [get]
 func (h *BookingHandler) ListProfessionalBookingsHandler(w http.ResponseWriter, r *http.Request) {
-    professionalIDStr := r.URL.Query().Get("professional_id")
-    if professionalIDStr == "" {
-        respondWithError(w, http.StatusBadRequest, "O parâmetro professional_id é obrigatório")
-        return
-    }
+	professionalIDStr := r.URL.Query().Get("professional_id")
 
-    professionalID, err := strconv.ParseUint(professionalIDStr, 10, 32)
-    if err != nil {
-        respondWithError(w, http.StatusBadRequest, "ID do profissional inválido")
-        return
-    }
-	if err := r.ParseForm(); err != nil {
-		respondWithError(w, http.StatusBadRequest, "parametros de busca invalidos")
-		return
-	}
-	var filters service.BookingFilters
-	if err := h.decoder.Decode(&filters, r.Form); err != nil {
-		respondWithError(w, http.StatusBadRequest, "parametros de filtro invalidos")
+	if professionalIDStr == "" {
+		respondWithError(w, http.StatusBadRequest, "O parâmetro professional_id é obrigatório")
 		return
 	}
 
-	bookings, err := h.bookingService.ListProfessionalBookings(r.Context(), uint(professionalID), &filters)
+	professionalID, err := strconv.ParseUint(professionalIDStr, 10, 32)
+	log.Println(professionalID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "ID do profissional inválido")
+		return
+	}
+
+	bookings, err := h.bookingService.ListProfessionalBookings(r.Context(), uint(professionalID), nil)
 	if err != nil {
 		handleServiceError(w, err)
 		return
 	}
+
+	// Retorna array vazio se não houver resultados
+	if bookings == nil {
+		respondWithJSON(w, http.StatusOK, []interface{}{})
+		return
+	}
+
 	respondWithJSON(w, http.StatusOK, bookings)
 }
 
@@ -153,6 +154,7 @@ func (h *BookingHandler) ListProfessionalBookingsHandler(w http.ResponseWriter, 
 // @Failure 400 {object} ErrorResponse
 // @Router /bookings/client [get]
 func (h *BookingHandler) ListClientBookingsHandler(w http.ResponseWriter, r *http.Request) {
+
 	clientIDStr := r.URL.Query().Get("client_id")
 	if clientIDStr == "" {
 		respondWithError(w, http.StatusBadRequest, "O parâmetro client_id é obrigatório")
@@ -161,13 +163,7 @@ func (h *BookingHandler) ListClientBookingsHandler(w http.ResponseWriter, r *htt
 
 	clientID, err := strconv.ParseUint(clientIDStr, 10, 32)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "ID do cliente inválido")
-		return
-	}
-
-	var filters service.BookingFilters
-	if err := h.decoder.Decode(&filters, r.Form); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid filter parameters")
+		respondWithError(w, http.StatusBadRequest, "ID do cliente deve ser um número válido")
 		return
 	}
 
@@ -177,15 +173,9 @@ func (h *BookingHandler) ListClientBookingsHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Filtra por status se fornecido
-	if status := r.URL.Query().Get("status"); status != "" {
-		var filtered []*service.BookingResponse
-		for _, b := range bookings {
-			if string(b.Status) == status {
-				filtered = append(filtered, b)
-			}
-		}
-		respondWithJSON(w, http.StatusOK, filtered)
+	// Retorna array vazio se não houver resultados
+	if bookings == nil {
+		respondWithJSON(w, http.StatusOK, []interface{}{})
 		return
 	}
 
@@ -206,13 +196,17 @@ func (h *BookingHandler) ListClientBookingsHandler(w http.ResponseWriter, r *htt
 // @Failure 403 {object} ErrorResponse
 // @Router /bookings/{id}/status [put]
 func (h *BookingHandler) UpdateBookingStatusHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.ParseUint(vars["id"], 10, 32)
+	// DEBUG similar para professional_id
+	professionalIDStr := r.URL.Query().Get("professional_id")
+	log.Printf("professional_id string: %q", professionalIDStr)
+
+	professionalID, err := strconv.ParseUint(professionalIDStr, 10, 32)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "ID de agendamento inválido")
+		log.Printf("Erro na conversão do professional_id: %v", err)
+		respondWithError(w, http.StatusBadRequest, "ID do profissional deve ser um número válido")
 		return
 	}
-
+	log.Printf("professional_id convertido: %d", professionalID)
 	var req struct {
 		Status domain.BookingStatus `json:"status"`
 	}
@@ -220,7 +214,7 @@ func (h *BookingHandler) UpdateBookingStatusHandler(w http.ResponseWriter, r *ht
 		respondWithError(w, http.StatusBadRequest, "Pacote de requisição invalido")
 		return
 	}
-	booking, err := h.bookingService.UpdateBookingStatus(r.Context(), uint(id), req.Status)
+	booking, err := h.bookingService.UpdateBookingStatus(r.Context(), uint(professionalID), req.Status)
 	if err != nil {
 		handleServiceError(w, err)
 		return

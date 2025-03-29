@@ -61,7 +61,7 @@ func (r *bookingRepository) Create(ctx context.Context, req *CreateBookingReques
 
 	// Cria o booking
 	booking := &domain.Booking{
-		ProfessinalID: req.ProfessionalID,
+		ProfessionalID: req.ProfessionalID,
 		ClientID:      req.ClientID,
 		StartTime:     req.StartTime,
 		EndTime:       req.EndTime,
@@ -92,31 +92,36 @@ func (r *bookingRepository) GetByID(ctx context.Context, id uint) (*domain.Booki
 }
 
 func (r *bookingRepository) ListByProfessional(ctx context.Context, professionalID uint, from, to time.Time) ([]*domain.Booking, error) {
-	var bookings []*domain.Booking
+    var bookings []*domain.Booking
+    
+    query := r.db.WithContext(ctx).
+        Where("professional_id = ?", professionalID)
 
-	query := r.db.WithContext(ctx).
-		Where("professional_id = ?", professionalID)
+    if !from.IsZero() {
+        query = query.Where("start_time >= ?", from)
+    }
+    if !to.IsZero() {
+        query = query.Where("end_time <= ?", to)
+    }
 
-
-	if !from.IsZero() {
-		query = query.Where("start_time >= ?", from)
-	}
-	if !to.IsZero() {
-		query = query.Where("end_time <= ?", to)
-	}
-
-	err := query.Order("start_time ASC").Find(&bookings).Error
-	return bookings, err
-
+    err := query.Order("start_time ASC").Find(&bookings).Error
+    if err != nil {
+        return nil, err
+    }
+    return bookings, nil
 }
 
 func (r *bookingRepository) ListByClient(ctx context.Context, clientID uint) ([]*domain.Booking, error) {
-	var bookings []*domain.Booking
-	err := r.db.WithContext(ctx).
-		Where("client_id = ?", clientID).
-		Order("start_time DESC").
-		Find(&bookings).Error
-	return bookings, err
+    var bookings []*domain.Booking
+    err := r.db.WithContext(ctx).
+        Where("client_id = ?", clientID).
+        Order("start_time DESC").
+        Find(&bookings).Error
+    
+    if err != nil {
+        return nil, err
+    }
+    return bookings, nil
 }
 
 func (r *bookingRepository) UpdateStatus(ctx context.Context, id uint, status domain.BookingStatus) (*domain.Booking, error) {

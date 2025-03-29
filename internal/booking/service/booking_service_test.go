@@ -39,7 +39,7 @@ func TestCreateBooking_Success(t *testing.T) {
 
 	expectedBooking := &domain.Booking{
 		ID:            1,
-		ProfessinalID: 1,
+		ProfessionalID: 1,
 		ClientID:      1,
 		StartTime:     startTime,
 		EndTime:       endTime,
@@ -97,7 +97,7 @@ func TestUpdateBookingStatus_Success(t *testing.T) {
 
 	expectedBooking := &domain.Booking{
 		ID:            bookingID,
-		ProfessinalID: 1,
+		ProfessionalID: 1,
 		ClientID:      1,
 		Status:        newStatus,
 	}

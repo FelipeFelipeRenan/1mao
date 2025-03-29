@@ -8,12 +8,15 @@ import (
 )
 
 
-func BookingRoutes(r *mux.Router, bookingService service.BookingService){
-	handler := handlers.NewBookingService(bookingService)
+func BookingRoutes(r *mux.Router, bookingService service.BookingService) {
+    handler := handlers.NewBookingHandler(bookingService)
 
-	// Rotas de Booking
-    r.HandleFunc("/bookings", handler.CreateBookingHandler).Methods("POST")
-    r.HandleFunc("/bookings/{id}", handler.GetBookingHandler).Methods("GET")
+    // Rotas fixas devem ser declaradas antes das rotas com parâmetros
     r.HandleFunc("/bookings/professional", handler.ListProfessionalBookingsHandler).Methods("GET")
     r.HandleFunc("/bookings/client", handler.ListClientBookingsHandler).Methods("GET")
-    r.HandleFunc("/bookings/{id}/status", handler.UpdateBookingStatusHandler).Methods("PUT")}
+    
+    // Rotas com parâmetros
+    r.HandleFunc("/bookings", handler.CreateBookingHandler).Methods("POST")
+    r.HandleFunc("/bookings/{id}", handler.GetBookingHandler).Methods("GET")
+    r.HandleFunc("/bookings/{id}/status", handler.UpdateBookingStatusHandler).Methods("PUT")
+}
