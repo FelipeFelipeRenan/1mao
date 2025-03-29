@@ -7,6 +7,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+      POSTGRES_HOST_AUTH_METHOD: trust # apenas para dev
     ports:
       - "${DB_PORT}:5432"
     volumes:
@@ -16,32 +17,35 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - backend
 
   app:
     build: .
     container_name: 1mao_app
     restart: always
     depends_on:
-      - db
-
-    environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
     ports:
       - "${APP_PORT}:8080"
-    env_file:
-       - .env
-    #volumes:
-     # - ./:/app
-     
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - backend
+
   loki:
     image: grafana/loki:latest
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - backend
 
   grafana:
     image: grafana/grafana:latest
@@ -49,6 +53,12 @@ services:
       - "3000:3000"
     depends_on:
       - loki
+    networks:
+      - backend
 
 volumes:
   postgres_data:
+
+networks:
+  backend:
+    driver: bridge

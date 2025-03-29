@@ -24,6 +24,11 @@ type Professional struct {
 	Password string
 }
 
+type Claims struct {
+    UserID uint   `json:"user_id"`
+    Role   string `json:"role"`
+    jwt.RegisteredClaims
+}
 // Repositórios de usuários e profissionais
 type UserRepository interface {
 	FindByEmail(email string) (*User, error)

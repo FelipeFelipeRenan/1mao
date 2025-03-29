@@ -5,6 +5,7 @@ import (
 	professional "1mao/internal/professional/domain"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"context"
@@ -16,7 +17,7 @@ type BookingRepository interface {
 	Create(ctx context.Context, req *CreateBookingRequest) (*domain.Booking, error)
 	GetByID(ctx context.Context, id uint) (*domain.Booking, error)
 	ListByProfessional(ctx context.Context, professionalID uint, from, to time.Time) ([]*domain.Booking, error)
-	ListByClient(ctx context.Context, clientID uint) ([]*domain.Booking, error)
+	ListByClient(ctx context.Context, clientID uint, from, to time.Time) ([]*domain.Booking, error)
 	UpdateStatus(ctx context.Context, id uint, status domain.BookingStatus) (*domain.Booking, error)
 	IsTimeSlotAvailable(ctx context.Context, professionalID uint, start, end time.Time) (bool, error)
 }
@@ -111,19 +112,30 @@ func (r *bookingRepository) ListByProfessional(ctx context.Context, professional
     return bookings, nil
 }
 
-func (r *bookingRepository) ListByClient(ctx context.Context, clientID uint) ([]*domain.Booking, error) {
-    var bookings []*domain.Booking
-    err := r.db.WithContext(ctx).
-        Where("client_id = ?", clientID).
-        Order("start_time DESC").
-        Find(&bookings).Error
+func (r *bookingRepository) ListByClient(ctx context.Context, clientID uint, from, to time.Time) ([]*domain.Booking, error) {
+    log.Printf("Repository: Buscando bookings para cliente %d", clientID)
     
+    var bookings []*domain.Booking
+    query := r.db.WithContext(ctx).Where("client_id = ?", clientID)
+
+    if !from.IsZero() {
+        query = query.Where("start_time >= ?", from)
+        log.Printf("Aplicando filtro from: %v", from)
+    }
+    if !to.IsZero() {
+        query = query.Where("end_time <= ?", to)
+        log.Printf("Aplicando filtro to: %v", to)
+    }
+
+    err := query.Order("start_time DESC").Find(&bookings).Error
     if err != nil {
+        log.Printf("Erro ao buscar bookings: %v", err)
         return nil, err
     }
+
+    log.Printf("Bookings encontrados no banco: %d", len(bookings))
     return bookings, nil
 }
-
 func (r *bookingRepository) UpdateStatus(ctx context.Context, id uint, status domain.BookingStatus) (*domain.Booking, error) {
 	var booking domain.Booking
 

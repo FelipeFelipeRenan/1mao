@@ -35,13 +35,11 @@ const docTemplate = `{
                 "summary": "Cria um novo agendamento",
                 "parameters": [
                     {
-                        "description": "Dados do agendamento",
-                        "name": "booking",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/service.CreateBookingRequest"
-                        }
+                        "type": "string",
+                        "description": "Token de autenticação (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -80,6 +78,11 @@ const docTemplate = `{
         },
         "/bookings/client": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retorna a lista de agendamentos de um cliente específico",
                 "produces": [
                     "application/json"
@@ -89,6 +92,13 @@ const docTemplate = `{
                 ],
                 "summary": "Lista agendamentos do cliente",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticação (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "ID do cliente",
@@ -152,9 +162,10 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Data inicial (YYYY-MM-DD)",
-                        "name": "from",
-                        "in": "query"
+                        "description": "Token de autenticação (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     },
                     {
                         "type": "string",
@@ -211,10 +222,10 @@ const docTemplate = `{
                 "summary": "Obtém um agendamento",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "ID do agendamento",
-                        "name": "id",
-                        "in": "path",
+                        "type": "string",
+                        "description": "Token de autenticação (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -260,10 +271,10 @@ const docTemplate = `{
                 "summary": "Atualiza status do agendamento",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "ID do agendamento",
-                        "name": "id",
-                        "in": "path",
+                        "type": "string",
+                        "description": "Token de autenticação (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     },
                     {
@@ -421,13 +432,19 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Retorna os dados do cliente autenticado",
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
                     "Clients"
                 ],
                 "summary": "Obter perfil do cliente",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token de autenticação (Bearer token)",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -684,6 +701,59 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users": {
+            "get": {
+                "description": "Retorna uma lista com todos os usuários cadastrados no sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Listar todos os usuários",
+                "responses": {
+                    "200": {
+                        "description": "Lista de usuários",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.Client"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou não fornecido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acesso negado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno ao processar a requisição",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -916,9 +986,6 @@ const docTemplate = `{
                 "professional_id": {
                     "type": "integer"
                 },
-                "service_id": {
-                    "type": "integer"
-                },
                 "start_time": {
                     "type": "string"
                 },
@@ -926,29 +993,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/domain.BookingStatus"
                 },
                 "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "service.CreateBookingRequest": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "integer"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "end_time": {
-                    "type": "string"
-                },
-                "professional_id": {
-                    "type": "integer"
-                },
-                "service_id": {
-                    "type": "integer"
-                },
-                "start_time": {
                     "type": "string"
                 }
             }

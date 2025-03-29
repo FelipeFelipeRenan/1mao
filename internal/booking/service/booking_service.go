@@ -13,8 +13,8 @@ type BookingService interface {
 	CreateBooking(ctx context.Context, req *CreateBookingRequest) (*BookingResponse, error)
 	GetBooking(ctx context.Context, id uint) (*BookingResponse, error)
 	ListProfessionalBookings(ctx context.Context, professionalID uint, filters *BookingFilters) ([]*BookingResponse, error)
-	ListClientBookings(ctx context.Context, clientID uint) ([]*BookingResponse, error)
-	UpdateBookingStatus(ctx context.Context, id uint, status domain.BookingStatus) (*BookingResponse, error)
+	ListClientBookings(ctx context.Context, clientID uint, filters *BookingFilters) ([]*BookingResponse, error)
+		UpdateBookingStatus(ctx context.Context, id uint, status domain.BookingStatus) (*BookingResponse, error)
 	CancelBooking(ctx context.Context, id uint) error
 }
 
@@ -56,6 +56,7 @@ type BookingFilters struct {
 	To     time.Time
 	Status domain.BookingStatus
 }
+
 
 func (s *bookingService) CreateBooking(ctx context.Context, req *CreateBookingRequest) (*BookingResponse, error) {
 
@@ -104,40 +105,54 @@ func (s *bookingService) GetBooking(ctx context.Context, id uint) (*BookingRespo
 
 func (s *bookingService) ListProfessionalBookings(ctx context.Context, professionalID uint, filters *BookingFilters) ([]*BookingResponse, error) {
 	var from, to time.Time
-	var status domain.BookingStatus
-
 	if filters != nil {
 		from = filters.From
 		to = filters.To
-		status = filters.Status
 	}
 
 	bookings, err := s.bookingRepo.ListByProfessional(ctx, professionalID, from, to)
 	if err != nil {
-		return nil, err
+		return nil, err // Propagação correta do erro
 	}
 
-	// filtra por status se necessario
 	var filtered []*domain.Booking
-	if status != "" {
+	if filters != nil && filters.Status != "" {
 		for _, b := range bookings {
-			if b.Status == status {
+			if b.Status == filters.Status {
 				filtered = append(filtered, b)
 			}
-
 		}
 	} else {
 		filtered = bookings
 	}
+
 	return s.toListResponse(filtered), nil
 }
 
-func (s *bookingService) ListClientBookings(ctx context.Context, clientID uint) ([]*BookingResponse, error) {
-	bookings, err := s.bookingRepo.ListByClient(ctx, clientID)
-	if err != nil {
-		return nil, err
-	}
-	return s.toListResponse(bookings), nil
+func (s *bookingService) ListClientBookings(ctx context.Context, clientID uint, filters *BookingFilters) ([]*BookingResponse, error) {
+    var from, to time.Time
+    if filters != nil {
+        from = filters.From
+        to = filters.To
+    }
+
+    bookings, err := s.bookingRepo.ListByClient(ctx, clientID, from, to)
+    if err != nil {
+        return nil, err
+    }
+
+    var filtered []*domain.Booking
+    if filters != nil && filters.Status != "" {
+        for _, b := range bookings {
+            if b.Status == filters.Status {
+                filtered = append(filtered, b)
+            }
+        }
+    } else {
+        filtered = bookings
+    }
+
+    return s.toListResponse(filtered), nil
 }
 
 func (s *bookingService) UpdateBookingStatus(ctx context.Context, id uint, status domain.BookingStatus) (*BookingResponse, error) {

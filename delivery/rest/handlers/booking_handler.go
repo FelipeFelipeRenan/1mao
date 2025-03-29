@@ -3,11 +3,14 @@ package handlers
 import (
 	"1mao/internal/booking/domain"
 	"1mao/internal/booking/service"
+	"1mao/internal/middleware"
 	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 )
@@ -43,7 +46,7 @@ func NewBookingHandler(bookingService service.BookingService) *BookingHandler {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param booking body service.CreateBookingRequest true "Dados do agendamento"
+// @Param   Authorization   header  string  true  "Token de autenticação (Bearer token)"// @Param booking body service.CreateBookingRequest true "Dados do agendamento"
 // @Success 201 {object} service.BookingResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
@@ -51,16 +54,35 @@ func NewBookingHandler(bookingService service.BookingService) *BookingHandler {
 // @Failure 500 {object} ErrorResponse
 // @Router /bookings [post]
 func (h *BookingHandler) CreateBookingHandler(w http.ResponseWriter, r *http.Request) {
-	var req service.CreateBookingRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+	// Obter informações do usuário autenticado
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	if !ok {
+		respondWithError(w, http.StatusUnauthorized, "Token inválido")
 		return
 	}
 
-	// Validação básica
-	if req.ProfessionalID == 0 || req.ClientID == 0 {
-		respondWithError(w, http.StatusBadRequest, "professional_id and client_id are required")
+	userID := uint(claims["user_id"].(float64))
+	userRole := claims["role"].(string)
+
+	var req service.CreateBookingRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Formato inválido")
 		return
+	}
+
+	// Validação adicional baseada no perfil
+	if userRole == "professional" {
+		// Profissional só pode criar bookings para outros clientes
+		if req.ProfessionalID != userID {
+			respondWithError(w, http.StatusForbidden, "Você só pode criar agendamentos para si mesmo como profissional")
+			return
+		}
+	} else if userRole == "user" {
+		// Cliente só pode criar bookings com outros profissionais
+		if req.ClientID != userID {
+			respondWithError(w, http.StatusForbidden, "Você só pode criar agendamentos para si mesmo como cliente")
+			return
+		}
 	}
 
 	booking, err := h.bookingService.CreateBooking(r.Context(), &req)
@@ -78,7 +100,7 @@ func (h *BookingHandler) CreateBookingHandler(w http.ResponseWriter, r *http.Req
 // @Tags Bookings
 // @Produce json
 // @Security ApiKeyAuth
-// @Param id path int true "ID do agendamento"
+// @Param   Authorization   header  string  true  "Token de autenticação (Bearer token)"// @Param id path int true "ID do agendamento"
 // @Success 200 {object} service.BookingResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
@@ -104,7 +126,7 @@ func (h *BookingHandler) GetBookingHandler(w http.ResponseWriter, r *http.Reques
 // @Tags Bookings
 // @Produce json
 // @Security ApiKeyAuth
-// @Param from query string false "Data inicial (YYYY-MM-DD)"
+// @Param   Authorization   header  string  true  "Token de autenticação (Bearer token)"// @Param from query string false "Data inicial (YYYY-MM-DD)"
 // @Param to query string false "Data final (YYYY-MM-DD)"
 // @Param status query string false "Status do agendamento"
 // @Success 200 {array} service.BookingResponse
@@ -112,27 +134,51 @@ func (h *BookingHandler) GetBookingHandler(w http.ResponseWriter, r *http.Reques
 // @Failure 401 {object} ErrorResponse
 // @Router /bookings/professional [get]
 func (h *BookingHandler) ListProfessionalBookingsHandler(w http.ResponseWriter, r *http.Request) {
-	professionalIDStr := r.URL.Query().Get("professional_id")
+	// Obter claims do contexto
+	log.Println("Iniciando ListProfessionalBookingsHandler")
 
-	if professionalIDStr == "" {
-		respondWithError(w, http.StatusBadRequest, "O parâmetro professional_id é obrigatório")
+	claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+	log.Printf("Claims: %+v, ok: %v", claims, ok)
+	if !ok {
+		respondWithError(w, http.StatusUnauthorized, "Token inválido")
 		return
 	}
 
-	professionalID, err := strconv.ParseUint(professionalIDStr, 10, 32)
-	log.Println(professionalID)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "ID do profissional inválido")
-		return
+	professionalID := uint(claims["user_id"].(float64))
+
+	// Inicializar filtros
+	filters := &service.BookingFilters{}
+
+	// Processar query parameters
+	query := r.URL.Query()
+
+	// Filtro de data inicial
+	if fromStr := query.Get("from"); fromStr != "" {
+		if from, err := time.Parse(time.RFC3339, fromStr); err == nil {
+			filters.From = from
+		}
 	}
 
-	bookings, err := h.bookingService.ListProfessionalBookings(r.Context(), uint(professionalID), nil)
+	// Filtro de data final
+	if toStr := query.Get("to"); toStr != "" {
+		if to, err := time.Parse(time.RFC3339, toStr); err == nil {
+			filters.To = to
+		}
+	}
+
+	// Filtro de status
+	if statusStr := query.Get("status"); statusStr != "" {
+		filters.Status = domain.BookingStatus(statusStr)
+	}
+
+	// Chamar service
+	bookings, err := h.bookingService.ListProfessionalBookings(r.Context(), professionalID, filters)
 	if err != nil {
 		handleServiceError(w, err)
 		return
 	}
 
-	// Retorna array vazio se não houver resultados
+	// Retornar array vazio se não houver resultados
 	if bookings == nil {
 		respondWithJSON(w, http.StatusOK, []interface{}{})
 		return
@@ -145,6 +191,8 @@ func (h *BookingHandler) ListProfessionalBookingsHandler(w http.ResponseWriter, 
 // @Summary Lista agendamentos do cliente
 // @Description Retorna a lista de agendamentos de um cliente específico
 // @Tags Bookings
+// @Security ApiKeyAuth
+// @Param   Authorization   header  string  true  "Token de autenticação (Bearer token)"
 // @Produce json
 // @Param client_id query int true "ID do cliente"
 // @Param from query string false "Data inicial (YYYY-MM-DD)"
@@ -154,32 +202,45 @@ func (h *BookingHandler) ListProfessionalBookingsHandler(w http.ResponseWriter, 
 // @Failure 400 {object} ErrorResponse
 // @Router /bookings/client [get]
 func (h *BookingHandler) ListClientBookingsHandler(w http.ResponseWriter, r *http.Request) {
+    // Obter claims do contexto
+    claims, ok := r.Context().Value(middleware.UserContextKey).(jwt.MapClaims)
+    if !ok {
+		respondWithError(w, http.StatusUnauthorized, "Token inválido")
+        return
+    }
+	
+    clientID := uint(claims["user_id"].(float64))
+	log.Println("id do cliente: ", clientID)
+    
+    // Processar query parameters para filtros
+    filters := &service.BookingFilters{}
+    if fromStr := r.URL.Query().Get("from"); fromStr != "" {
+        if from, err := time.Parse(time.RFC3339, fromStr); err == nil {
+            filters.From = from
+        }
+    }
+    if toStr := r.URL.Query().Get("to"); toStr != "" {
+        if to, err := time.Parse(time.RFC3339, toStr); err == nil {
+            filters.To = to
+        }
+    }
+    if statusStr := r.URL.Query().Get("status"); statusStr != "" {
+        filters.Status = domain.BookingStatus(statusStr)
+    }
 
-	clientIDStr := r.URL.Query().Get("client_id")
-	if clientIDStr == "" {
-		respondWithError(w, http.StatusBadRequest, "O parâmetro client_id é obrigatório")
-		return
-	}
+    // Chamar service com filtros
+    bookings, err := h.bookingService.ListClientBookings(r.Context(), clientID, filters)
+    if err != nil {
+        handleServiceError(w, err)
+        return
+    }
 
-	clientID, err := strconv.ParseUint(clientIDStr, 10, 32)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "ID do cliente deve ser um número válido")
-		return
-	}
+    if bookings == nil {
+        respondWithJSON(w, http.StatusOK, []interface{}{})
+        return
+    }
 
-	bookings, err := h.bookingService.ListClientBookings(r.Context(), uint(clientID))
-	if err != nil {
-		handleServiceError(w, err)
-		return
-	}
-
-	// Retorna array vazio se não houver resultados
-	if bookings == nil {
-		respondWithJSON(w, http.StatusOK, []interface{}{})
-		return
-	}
-
-	respondWithJSON(w, http.StatusOK, bookings)
+    respondWithJSON(w, http.StatusOK, bookings)
 }
 
 // UpdateBookingStatusHandler atualiza o status de um agendamento
@@ -189,7 +250,7 @@ func (h *BookingHandler) ListClientBookingsHandler(w http.ResponseWriter, r *htt
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param id path int true "ID do agendamento"
+// @Param   Authorization   header  string  true  "Token de autenticação (Bearer token)"// @Param id path int true "ID do agendamento"
 // @Param status body UpdateStatusRequest true "Novo status"
 // @Success 200 {object} service.BookingResponse
 // @Failure 400 {object} ErrorResponse

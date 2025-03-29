@@ -106,8 +106,8 @@ func (h *ClientHandler) Login(w http.ResponseWriter, r *http.Request) {
 //	@Summary		Obter perfil do cliente
 //	@Description	Retorna os dados do cliente autenticado
 //	@Tags			Clients
-//	@Security		ApiKeyAuth
-//	@Produce		json
+// @Security ApiKeyAuth
+// @Param   Authorization   header  string  true  "Token de autenticação (Bearer token)"//	@Produce		json
 //	@Success		200	{object}	domain.Client
 //	@Failure		401	{object}	map[string]string	"Não autorizado"
 //	@Router			/client/me [get]
@@ -127,6 +127,17 @@ func (h *ClientHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
+// GetAllUsers godoc
+// @Summary Listar todos os usuários
+// @Description Retorna uma lista com todos os usuários cadastrados no sistema
+// @Tags Clients
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} domain.Client "Lista de usuários"
+// @Failure 401 {object} map[string]string "Token inválido ou não fornecido"
+// @Failure 403 {object} map[string]string "Acesso negado"
+// @Failure 500 {object} map[string]string "Erro interno ao processar a requisição"
+// @Router /users [get]
 func (h *ClientHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := h.authService.GetAllUsers()
 	if err != nil {
