@@ -8,6 +8,7 @@ import (
 	"1mao/internal/client/repository"
 	"1mao/internal/client/service"
 	chat "1mao/internal/notification/domain"
+	payment "1mao/internal/payment/domain"
 	professional "1mao/internal/professional/domain"
 
 	"fmt"
@@ -51,6 +52,7 @@ func main() {
 		&chat.Message{},
 		&booking.Booking{},
 		&booking.Availability{},
+		&payment.Transaction{},
 	}
 
 	for _, model := range models {
