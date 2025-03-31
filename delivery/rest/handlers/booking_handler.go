@@ -305,5 +305,3 @@ func handleServiceError(w http.ResponseWriter, err error) {
 		respondWithError(w, http.StatusInternalServerError, "Internal server error")
 	}
 }
-
-// TODO: implementar metodos do handler
