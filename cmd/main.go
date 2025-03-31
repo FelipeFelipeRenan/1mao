@@ -50,6 +50,7 @@ func main() {
 		&professional.Professional{},
 		&chat.Message{},
 		&booking.Booking{},
+		&booking.Availability{},
 	}
 
 	for _, model := range models {

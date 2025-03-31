@@ -13,9 +13,8 @@ const (
 	RoleProfessional Role = "professional"
 )
 
-// Client representa um usuário cliente do sistema
-//
 // Client representa um profissional
+//
 //	@Description	Modelo completo de cliente
 //	@name			Client
 //	@model			Client
