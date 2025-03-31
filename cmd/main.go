@@ -45,24 +45,19 @@ func main() {
 		}
 	}()
 
-	if err := db.AutoMigrate(&client.Client{}); err != nil {
-		log.Fatal("Erro ao migrar modelo Client:", err)
+	models := []interface{}{
+		&client.Client{},
+		&professional.Professional{},
+		&chat.Message{},
+		&booking.Booking{},
 	}
-	log.Println("Tabela 'client' criada com sucesso")
 
-	if err := db.AutoMigrate(&professional.Professional{}); err != nil {
-		log.Fatal("Erro ao migrar modelo Professional:", err)
+	for _, model := range models {
+		if err := db.AutoMigrate(model); err != nil{
+			log.Fatalf("erro ao migrar modelo: %v", err)
+		}
+		log.Printf("tabela para %T criada com sucesso", model)
 	}
-	log.Println("Tabela 'professional' criada com sucesso")
-
-	if err := db.AutoMigrate(&chat.Message{}); err != nil {
-		log.Fatal("Erro ao migrar modelo Message:", err)
-	}
-	log.Println("Tabela 'message' criada com sucesso")
-	if err := db.AutoMigrate(&booking.Booking{}); err != nil {
-		log.Fatal("Erro ao migrar modelo Booking:", err)
-	}
-	log.Println("Tabela 'booking' criada com sucesso")
 
 	// Instanciar serviços
 	userRepo := repository.NewUserRepository(db)
