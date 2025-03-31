@@ -76,6 +76,6 @@ func main() {
 	// Obter porta da aplicação
 	server_port := os.Getenv("APP_PORT")
 
-	fmt.Printf("🚀 Servidor rodando na porta %s\n", server_port)
+	fmt.Printf("---- Servidor rodando na porta %s\n ----", server_port)
 	log.Fatal(http.ListenAndServe(":"+server_port, router))
 }
