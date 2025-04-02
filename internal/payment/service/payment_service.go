@@ -8,6 +8,7 @@ import (
 type PaymentService interface {
 	CreatePayment(bookingID string, amount int64, method string) (*domain.Transaction, error)
 }
+
 type paymentService struct {
 	repo repository.PaymentRepository
 	stripe *StripeClient

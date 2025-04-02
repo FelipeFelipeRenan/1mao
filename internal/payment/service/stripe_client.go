@@ -22,7 +22,6 @@ func (c *StripeClient) CreatePaymentIntent(amount int64, currency string) (*stri
 		Currency: stripe.String(currency),
 		PaymentMethodTypes: []*string{
 			stripe.String("card"),
-			stripe.String("pix"),
 		},
 	}
 	return paymentintent.New(params)

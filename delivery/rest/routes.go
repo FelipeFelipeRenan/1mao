@@ -8,6 +8,9 @@ import (
 	"1mao/internal/middleware"
 	notificationRepository "1mao/internal/notification/repository"
 	"1mao/internal/notification/websocket"
+	"1mao/internal/payment/repository"
+	"1mao/internal/payment/service"
+	"os"
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -22,6 +25,7 @@ func SetupRoutes(db *gorm.DB, clientService *clientService.ClientService) *mux.R
 	messageRepo := notificationRepository.NewMessageRepository(db)
 	bookingService := bookingService.NewBookingService(bookingRepository.NewBookingRepository(db))
 
+	paymentService := service.NewPaymentService(repository.NewPaymentRepository(db), os.Getenv("STRIPE_KEY"))
 	// Criar Hub com repositório de mensagens
 	hub := websocket.NewHub(messageRepo)
 	go hub.Run()
@@ -45,6 +49,8 @@ func SetupRoutes(db *gorm.DB, clientService *clientService.ClientService) *mux.R
 	routes.UserRoutes(router, clientService)
 	// Rotas de agendamento
 	routes.BookingRoutes(router, bookingService)
+	// Rotas de pagamento
+	routes.PaymentRoutes(router, &paymentService )
 
 	return router
 }
