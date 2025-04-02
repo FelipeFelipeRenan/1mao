@@ -13,9 +13,9 @@ func UserRoutes(r *mux.Router, userService *service.ClientService) {
 	userHandler := httpa.NewClientHandler(*userService)
 
 	// Rotas públicas
-	r.HandleFunc("/register", userHandler.Register).Methods("POST")
-	r.HandleFunc("/login", userHandler.Login).Methods("POST")
-	r.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
+	r.HandleFunc("/client/register", userHandler.Register).Methods("POST")
+	r.HandleFunc("/client/login", userHandler.Login).Methods("POST")
+	r.HandleFunc("/client/users", userHandler.GetAllUsers).Methods("GET")
 
 	// Rotas protegidas (somente para clientes autenticados)
 	authRouter := r.PathPrefix("/client").Subrouter()

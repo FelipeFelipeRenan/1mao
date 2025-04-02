@@ -137,7 +137,7 @@ func (h *ClientHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} map[string]string "Token inválido ou não fornecido"
 // @Failure 403 {object} map[string]string "Acesso negado"
 // @Failure 500 {object} map[string]string "Erro interno ao processar a requisição"
-// @Router /users [get]
+// @Router /client/users [get]
 func (h *ClientHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := h.authService.GetAllUsers()
 	if err != nil {

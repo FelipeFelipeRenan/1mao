@@ -11,11 +11,29 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// RegisterRequest define a estrutura para registro de clientes
+//
+//	@Description	Dados necessários para registrar um novo cliente
+type RegisterRequest struct {
+	Name     string `json:"name" example:"João Silva"`
+	Email    string `json:"email" example:"cliente@example.com"`
+	Password string `json:"password" example:"senhaSegura123"`
+	Phone    string `json:"phone" example:"+5511999999999"`
+}
+
+// LoginRequest define a estrutura para login de clientes
+//
+//	@Description	Credenciais para autenticação do cliente
+type LoginRequest struct {
+	Email    string `json:"email" example:"cliente@example.com"`
+	Password string `json:"password" example:"senhaSegura123"`
+}
+
 // ProfessionalHandler lida com requisições relacionadas a profissionais
+//
 //	@title			Professional API
 //	@version		1.0
 //	@description	API para gestão de profissionais
-
 type ProfessionalHandler struct {
 	service service.ProfessionalService
 }
@@ -26,12 +44,13 @@ func NewProfessionalHandler(service service.ProfessionalService) *ProfessionalHa
 }
 
 // Register godoc
+//
 //	@Summary		Registrar novo profissional
 //	@Description	Cria uma nova conta de profissional
 //	@Tags			Professionals
 //	@Accept			json
 //	@Produce		json
-//	@Param			professional	body		domain.Professional	true	"Dados do profissional"
+//	@Param			professional	body		RegisterRequest	true	"Dados do profissional"
 //	@Success		201				{object}	domain.Professional
 //	@Failure		400				{object}	map[string]string	"Dados inválidos"
 //	@Failure		500				{object}	map[string]string	"Erro interno"
@@ -53,6 +72,7 @@ func (h *ProfessionalHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetProfessionalByID godoc
+//
 //	@Summary		Obter profissional por ID
 //	@Description	Retorna os detalhes de um profissional específico
 //	@Tags			Professionals
@@ -80,6 +100,7 @@ func (h *ProfessionalHandler) GetProfessionalByID(w http.ResponseWriter, r *http
 }
 
 // GetAllProfessionals godoc
+//
 //	@Summary		Listar todos os profissionais
 //	@Description	Retorna uma lista com todos os profissionais cadastrados
 //	@Tags			Professionals
@@ -97,14 +118,8 @@ func (h *ProfessionalHandler) GetAllProfessionals(w http.ResponseWriter, r *http
 	json.NewEncoder(w).Encode(professionals)
 }
 
-// LoginRequest define a estrutura para o corpo do login
-//	@Description	Credenciais para login de profissional
-type LoginRequest struct {
-	Email    string `json:"email" example:"professional@example.com"`
-	Password string `json:"password" example:"sua_senha_secreta"`
-}
-
 // Login godoc
+//
 //	@Summary		Login de profissional
 //	@Description	Autentica um profissional e retorna um token JWT
 //	@Tags			Auth

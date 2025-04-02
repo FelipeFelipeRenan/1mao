@@ -475,7 +475,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/httpa.RegisterRequest"
+                            "$ref": "#/definitions/internal_client_delivery_httpa.RegisterRequest"
                         }
                     }
                 ],
@@ -497,6 +497,59 @@
                     },
                     "500": {
                         "description": "Erro interno",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/client/users": {
+            "get": {
+                "description": "Retorna uma lista com todos os usuários cadastrados no sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Listar todos os usuários",
+                "responses": {
+                    "200": {
+                        "description": "Lista de usuários",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.Client"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token inválido ou não fornecido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Acesso negado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno ao processar a requisição",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -582,7 +635,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.Professional"
+                            "$ref": "#/definitions/internal_professional_delivery_httpa.RegisterRequest"
                         }
                     }
                 ],
@@ -683,59 +736,6 @@
                     },
                     "500": {
                         "description": "Erro interno",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/users": {
-            "get": {
-                "description": "Retorna uma lista com todos os usuários cadastrados no sistema",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Clients"
-                ],
-                "summary": "Listar todos os usuários",
-                "responses": {
-                    "200": {
-                        "description": "Lista de usuários",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/domain.Client"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Token inválido ou não fornecido",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Acesso negado",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Erro interno ao processar a requisição",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -909,7 +909,21 @@
                 }
             }
         },
-        "httpa.RegisterRequest": {
+        "internal_client_delivery_httpa.LoginRequest": {
+            "description": "Credenciais para autenticação do cliente",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "cliente@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "senhaSegura123"
+                }
+            }
+        },
+        "internal_client_delivery_httpa.RegisterRequest": {
             "description": "Dados necessários para registrar um novo cliente",
             "type": "object",
             "properties": {
@@ -931,7 +945,7 @@
                 }
             }
         },
-        "internal_client_delivery_httpa.LoginRequest": {
+        "internal_professional_delivery_httpa.LoginRequest": {
             "description": "Credenciais para autenticação do cliente",
             "type": "object",
             "properties": {
@@ -945,17 +959,25 @@
                 }
             }
         },
-        "internal_professional_delivery_httpa.LoginRequest": {
-            "description": "Credenciais para login de profissional",
+        "internal_professional_delivery_httpa.RegisterRequest": {
+            "description": "Dados necessários para registrar um novo cliente",
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string",
-                    "example": "professional@example.com"
+                    "example": "cliente@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "João Silva"
                 },
                 "password": {
                     "type": "string",
-                    "example": "sua_senha_secreta"
+                    "example": "senhaSegura123"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+5511999999999"
                 }
             }
         },

@@ -118,7 +118,17 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
-  httpa.RegisterRequest:
+  internal_client_delivery_httpa.LoginRequest:
+    description: Credenciais para autenticação do cliente
+    properties:
+      email:
+        example: cliente@example.com
+        type: string
+      password:
+        example: senhaSegura123
+        type: string
+    type: object
+  internal_client_delivery_httpa.RegisterRequest:
     description: Dados necessários para registrar um novo cliente
     properties:
       email:
@@ -134,7 +144,7 @@ definitions:
         example: "+5511999999999"
         type: string
     type: object
-  internal_client_delivery_httpa.LoginRequest:
+  internal_professional_delivery_httpa.LoginRequest:
     description: Credenciais para autenticação do cliente
     properties:
       email:
@@ -144,14 +154,20 @@ definitions:
         example: senhaSegura123
         type: string
     type: object
-  internal_professional_delivery_httpa.LoginRequest:
-    description: Credenciais para login de profissional
+  internal_professional_delivery_httpa.RegisterRequest:
+    description: Dados necessários para registrar um novo cliente
     properties:
       email:
-        example: professional@example.com
+        example: cliente@example.com
+        type: string
+      name:
+        example: João Silva
         type: string
       password:
-        example: sua_senha_secreta
+        example: senhaSegura123
+        type: string
+      phone:
+        example: "+5511999999999"
         type: string
     type: object
   service.BookingResponse:
@@ -480,7 +496,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/httpa.RegisterRequest'
+          $ref: '#/definitions/internal_client_delivery_httpa.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -501,6 +517,41 @@ paths:
               type: string
             type: object
       summary: Registrar novo cliente
+      tags:
+      - Clients
+  /client/users:
+    get:
+      consumes:
+      - application/json
+      description: Retorna uma lista com todos os usuários cadastrados no sistema
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de usuários
+          schema:
+            items:
+              $ref: '#/definitions/domain.Client'
+            type: array
+        "401":
+          description: Token inválido ou não fornecido
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Acesso negado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erro interno ao processar a requisição
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar todos os usuários
       tags:
       - Clients
   /professional/{id}:
@@ -581,7 +632,7 @@ paths:
         name: professional
         required: true
         schema:
-          $ref: '#/definitions/domain.Professional'
+          $ref: '#/definitions/internal_professional_delivery_httpa.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -625,39 +676,4 @@ paths:
       summary: Listar todos os profissionais
       tags:
       - Professionals
-  /users:
-    get:
-      consumes:
-      - application/json
-      description: Retorna uma lista com todos os usuários cadastrados no sistema
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Lista de usuários
-          schema:
-            items:
-              $ref: '#/definitions/domain.Client'
-            type: array
-        "401":
-          description: Token inválido ou não fornecido
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "403":
-          description: Acesso negado
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Erro interno ao processar a requisição
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Listar todos os usuários
-      tags:
-      - Clients
 swagger: "2.0"
