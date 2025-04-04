@@ -1,0 +1,9 @@
+{
+    "payment_intent": {
+      "id": "pi_3RAJCBPYy1oPk8uJ2Q8vTC4P",
+      "object": "payment_intent",
+      "amount": 35000,
+      "currency": "brl",
+      "status": "succeeded"
+    }
+  }

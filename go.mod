@@ -17,6 +17,8 @@ require (
 	golang.org/x/time v0.11.0
 )
 
+require github.com/stripe/stripe-go/v76 v76.25.0 // indirect
+
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/go-openapi/jsonpointer v0.21.1 // indirect

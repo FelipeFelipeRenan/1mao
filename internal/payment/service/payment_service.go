@@ -3,12 +3,16 @@ package service
 import (
 	"1mao/internal/payment/domain"
 	"1mao/internal/payment/repository"
+
+	"github.com/google/uuid"
 )
 
 type PaymentService interface {
-	CreatePayment(bookingID string, amount int64, method string) (*domain.Transaction, error)
+	CreatePayment(clientID string, bookingID string, amount int64, method string) (*domain.Transaction, error)
 	ConfirmPayment(gatewayID string) error
 	FailPayment(gatewayID string) error
+	GetPaymentByID(paymentID string) (*domain.Transaction, error)
+	GetClientPayments(clientID string) ([]domain.Transaction, error)
 }
 
 type paymentService struct {
@@ -23,7 +27,7 @@ func NewPaymentService(repo repository.PaymentRepository, stripeKey string) Paym
 	}
 }
 
-func (s *paymentService) CreatePayment(bookingID string, amount int64, method string) (*domain.Transaction, error) {
+func (s *paymentService) CreatePayment(clientID string, bookingID string, amount int64, method string) (*domain.Transaction, error) {
 	// criar intent no stripe
 	intent, err := s.stripe.CreatePaymentIntent(amount, "brl")
 	if err != nil {
@@ -31,7 +35,9 @@ func (s *paymentService) CreatePayment(bookingID string, amount int64, method st
 	}
 
 	transaction := domain.Transaction{
+		ID:            uuid.NewString(),
 		BookingID:     bookingID,
+		ClientID:      clientID,
 		Amount:        amount,
 		Currency:      "BRL",
 		Status:        domain.StatusPending,
@@ -49,4 +55,12 @@ func (s *paymentService) ConfirmPayment(gatewayID string) error {
 
 func (s *paymentService) FailPayment(gatewayID string) error {
 	return s.repo.UpdateStatus(gatewayID, string(domain.StatusFailed))
+}
+
+func (s *paymentService) GetPaymentByID(paymentID string) (*domain.Transaction, error) {
+	return s.repo.GetByID(paymentID)
+}
+
+func (s *paymentService) GetClientPayments(clientID string) ([]domain.Transaction, error) {
+	return s.repo.GetByClientID(clientID)
 }

@@ -18,6 +18,7 @@ const (
 type Transaction struct {
 	ID            string `json:"id" gorm:"primaryKey"`
 	BookingID     string `json:"booking_id" gorm:"unique;not null"`
+	ClientID      string `json:"client_id"`
 	Amount        int64  `json:"amount" gorm:"not null"`
 	Currency      string `json:"currency" gorm:"not null"`
 	Status        Status `json:"status" gorm:"not null"`

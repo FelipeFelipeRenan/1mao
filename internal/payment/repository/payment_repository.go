@@ -10,6 +10,8 @@ type PaymentRepository interface {
 	CreateTransaction(transaction domain.Transaction) error
 	GetByGatewayID(gatewayID string) (*domain.Transaction, error)
 	UpdateStatus(transactionID string, status string) error
+	GetByID(id string) (*domain.Transaction, error)
+	GetByClientID(clientID string) ([]domain.Transaction, error)
 }
 
 type paymentRepository struct {
@@ -33,6 +35,18 @@ func (p *paymentRepository) GetByGatewayID(gatewayID string) (*domain.Transactio
 
 func (p *paymentRepository) UpdateStatus(transactionID string, status string) error {
 	return p.db.Model(&domain.Transaction{}).
-		Where("id = ?", transactionID).
+		Where("gateway_id = ?", transactionID).
 		Update("status", status).Error
+}
+
+func (r *paymentRepository) GetByID(id string) (*domain.Transaction, error) {
+	var transaction domain.Transaction
+	err := r.db.Where("id = ?", id).First(&transaction).Error
+	return &transaction, err
+}
+
+func (r *paymentRepository) GetByClientID(clientID string) ([]domain.Transaction, error) {
+    var transactions []domain.Transaction
+    err := r.db.Where("client_id = ?", clientID).Find(&transactions).Error
+    return transactions, err
 }

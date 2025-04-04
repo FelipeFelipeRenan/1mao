@@ -7,10 +7,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
-
-func PaymentRoutes(r *mux.Router, paymentService *service.PaymentService){
+func PaymentRoutes(r *mux.Router, paymentService *service.PaymentService) {
 	handler := httpa.NewPaymentHandler(*paymentService)
 
-	r.HandleFunc("/payments", handler.CreatePayment).Methods("POST")
-	r.HandleFunc("payments/webhook", handler.HandleWebhook).Methods("POST")
+	r.HandleFunc("/payments/webhook", handler.HandleWebhook).Methods("POST")
+	r.HandleFunc("/clients/{client_id}/payments", handler.CreatePayment).Methods("POST")
+	r.HandleFunc("/payments/{id}", handler.GetPaymentStatus).Methods("GET")
+	r.HandleFunc("/clients/{client_id}/payments", handler.GetClientPayments).Methods("GET")
 }

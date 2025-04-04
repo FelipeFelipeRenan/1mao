@@ -29,14 +29,14 @@ var (
 //	@name			Booking
 //	@model			Booking
 type Booking struct {
-	ID            uint          `json:"id" gorm:"primaryKey"`
-    ProfessionalID uint          `json:"professional_id" gorm:"column:professional_id"`  // Corrigido aqui
-	ClientID      uint          `json:"client_id"`
-	StartTime     time.Time     `json:"start_time"`
-	EndTime       time.Time     `json:"end_time"`
-	Status        BookingStatus `json:"status"`
-	CreatedAt     time.Time     `json:"created_at"`
-	UpdatedAt     time.Time     `json:"updated_at"`
+	ID             uint          `json:"id" gorm:"primaryKey"`
+	ProfessionalID uint          `json:"professional_id" gorm:"column:professional_id"` // Corrigido aqui
+	ClientID       uint          `json:"client_id"`
+	StartTime      time.Time     `json:"start_time"`
+	EndTime        time.Time     `json:"end_time"`
+	Status         BookingStatus `json:"status"`
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
 }
 
 type Availability struct {
