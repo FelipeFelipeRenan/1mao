@@ -11,8 +11,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/stripe/stripe-go/v81"
-	"github.com/stripe/stripe-go/v81/webhook"
+	"github.com/stripe/stripe-go/v76"
 )
 
 type PaymentHandler struct {
@@ -25,20 +24,20 @@ func NewPaymentHandler(paymentService service.PaymentService) *PaymentHandler {
 	}
 }
 
-func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request){
+func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	clientID := vars["client_id"]
 
 	var req dtos.CreatePaymentRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req);err != nil{
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "requisição invalida", http.StatusBadRequest)
 		return
-	} 
+	}
 
-	if req.Amount <= 0{
+	if req.Amount <= 0 {
 		http.Error(w, "o montante deve ser positivo", http.StatusBadRequest)
-		return 
+		return
 	}
 
 	transaction, err := h.paymentService.CreatePayment(clientID, req.BookingID, req.Amount, req.Method)
@@ -47,74 +46,61 @@ func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	w.Header().Set("Content-Type","application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(transaction)
 
 }
 
 func (h *PaymentHandler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
-	log.Println("Webhook recebido")
+	const MaxBodyBytes = int64(65536)
 
-    const MaxBodyBytes = int64(65536)
-    r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
+	r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
+	payload, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading request body: %v\n", err)
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
 
-    payload, err := io.ReadAll(r.Body)
-	log.Printf("Payload: %s", string(payload))
+	event := stripe.Event{}
 
-    if err != nil {
-        http.Error(w, "erro ao ler corpo", http.StatusBadRequest)
-        return
-    }
+	if err := json.Unmarshal(payload, &event); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to parse webhook body json: %v\n", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-	
+	// Unmarshal the event data into an appropriate struct depending on its Type
+	switch event.Type {
+	case "payment_intent.succeeded":
+		var paymentIntent stripe.PaymentIntent
+		err := json.Unmarshal(event.Data.Raw, &paymentIntent)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing webhook JSON: %v\n", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if err = h.paymentService.ConfirmPayment(paymentIntent.ID); err != nil {
+			log.Println("Confirmação com erro")
+		}
 
-    signature := r.Header.Get("Stripe-Signature")
-    event, err := webhook.ConstructEvent(payload, signature, os.Getenv("STRIPE_WEBHOOK_SECRET"))
-    if err != nil {
-		log.Printf("Erro na validação: %v", err)
+		fmt.Println("PaymentIntent was successful!")
+	case "payment_method.attached":
+		var paymentMethod stripe.PaymentMethod
+		err := json.Unmarshal(event.Data.Raw, &paymentMethod)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing webhook JSON: %v\n", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		fmt.Println("PaymentMethod was attached to a Customer!")
+	// ... handle other event types
+	default:
+		fmt.Fprintf(os.Stderr, "Unhandled event type: %s\n", event.Type)
+	}
 
-        http.Error(w, "assinatura inválida", http.StatusUnauthorized)
-        return
-    }
-
-	log.Printf("Tipo de evento: %s", event.Type)
-
-    var handlerErr error // Variável única para tratamento de erros
-
-    switch event.Type {
-    case "payment_intent.succeeded":
-        var intent stripe.PaymentIntent
-        if err := json.Unmarshal(event.Data.Raw, &intent); err != nil {
-            handlerErr = fmt.Errorf("erro no parsing do evento: %w", err)
-            break
-        }
-        if err := h.paymentService.ConfirmPayment(intent.ID); err != nil {
-            handlerErr = fmt.Errorf("falha ao confirmar pagamento: %w", err)
-        }
-
-    case "payment_intent.payment_failed":
-        var intent stripe.PaymentIntent
-        if err := json.Unmarshal(event.Data.Raw, &intent); err != nil {
-            handlerErr = fmt.Errorf("erro no parsing do evento: %w", err)
-            break
-        }
-        if err := h.paymentService.FailPayment(intent.ID); err != nil {
-            handlerErr = fmt.Errorf("falha ao registrar pagamento falho: %w", err)
-        }
-
-    default:
-        handlerErr = fmt.Errorf("tipo de evento não tratado: %s", event.Type)
-    }
-
-    if handlerErr != nil {
-        log.Printf("Erro no webhook: %v", handlerErr)
-        http.Error(w, handlerErr.Error(), http.StatusInternalServerError)
-        return
-    }
-
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(`{"status":"processed"}`))
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *PaymentHandler) GetPaymentStatus(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +120,7 @@ func (h *PaymentHandler) GetPaymentStatus(w http.ResponseWriter, r *http.Request
 	})
 }
 
-func (h *PaymentHandler) GetClientPayments(w http.ResponseWriter, r *http.Request){
+func (h *PaymentHandler) GetClientPayments(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	clientID := vars["client_id"]
 

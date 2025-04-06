@@ -3,6 +3,7 @@ package service
 import (
 	"1mao/internal/payment/domain"
 	"1mao/internal/payment/repository"
+	"log"
 
 	"github.com/google/uuid"
 )
@@ -50,10 +51,12 @@ func (s *paymentService) CreatePayment(clientID string, bookingID string, amount
 }
 
 func (s *paymentService) ConfirmPayment(gatewayID string) error {
+	log.Printf("Confirmando pagamento: %s", gatewayID)
 	return s.repo.UpdateStatus(gatewayID, string(domain.StatusPaid))
 }
 
 func (s *paymentService) FailPayment(gatewayID string) error {
+	log.Printf("Falhando pagamento: %s", gatewayID)
 	return s.repo.UpdateStatus(gatewayID, string(domain.StatusFailed))
 }
 
