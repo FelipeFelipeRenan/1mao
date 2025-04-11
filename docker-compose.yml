@@ -20,6 +20,12 @@ services:
     networks:
       - backend
 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
   app:
     build: .
     container_name: 1mao_app
@@ -58,6 +64,7 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   backend:
