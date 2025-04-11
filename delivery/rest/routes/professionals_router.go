@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"1mao/config/cache"
 	"1mao/internal/middleware"
 	"1mao/internal/professional/delivery/httpa"
 	"1mao/internal/professional/repository"
@@ -12,8 +13,10 @@ import (
 
 // ProfessionalRoutes configura as rotas para profissionais
 func ProfessionalRoutes(router *mux.Router, db *gorm.DB) {
+
+	redisClient := cache.InitRedis()
 	professionalRepo := repository.NewProfessionalRepository(db)
-	professionalService := service.NewProfessionalService(professionalRepo)
+	professionalService := service.NewProfessionalService(professionalRepo, redisClient)
 	professionalHandler := httpa.NewProfessionalHandler(professionalService)
 
 	// Rotas públicas

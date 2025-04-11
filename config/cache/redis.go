@@ -13,7 +13,7 @@ var (
 )
 
 
-func InitRedis(){
+func InitRedis() *redis.Client{
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr: os.Getenv("REDIS_URL"),
 		Password: os.Getenv("REDIS_PASSWORD"),
@@ -24,4 +24,6 @@ func InitRedis(){
 	if err != nil {
 		panic("Falha ao conectar com o Redis: " + err.Error())
 	}
+
+	return RedisClient
 }
