@@ -77,12 +77,12 @@ func (h *PaymentHandler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		var paymentIntent stripe.PaymentIntent
 		err := json.Unmarshal(event.Data.Raw, &paymentIntent)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error parsing webhook JSON: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Erro ao realizar parsing do webhook: %v\n", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		if err = h.paymentService.ConfirmPayment(paymentIntent.ID); err != nil {
-			log.Println("Confirmação com erro")
+			log.Println("Erro ao atualizar o status do pagamento: ", err)
 		}
 
 		fmt.Println("PaymentIntent was successful!")
@@ -95,7 +95,17 @@ func (h *PaymentHandler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Println("PaymentMethod was attached to a Customer!")
-	// ... handle other event types
+	case "payment_method.failed":
+		var paymentIntent stripe.PaymentIntent
+		err := json.Unmarshal(event.Data.Raw, &paymentIntent)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Erro ao realizar parsing do webhook: %v\n", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if err = h.paymentService.FailPayment(paymentIntent.ID); err != nil{
+			log.Println("Erro ao atualizar o status do pagamento: ", err)
+		}
 	default:
 		fmt.Fprintf(os.Stderr, "Unhandled event type: %s\n", event.Type)
 	}
