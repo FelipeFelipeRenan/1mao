@@ -26,6 +26,11 @@ services:
       - "6379:6379"
     networks:
       - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
     volumes:
       - redis_data:/data
   app:
@@ -33,8 +38,10 @@ services:
     container_name: 1mao_app
     restart: always
     depends_on:
-      - redis 
-      - db
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     env_file:
       - .env
     ports:
