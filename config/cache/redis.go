@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"log"
 	"os"
 
 	"github.com/redis/go-redis/v9"
@@ -12,12 +13,13 @@ var (
 	ctx         = context.Background()
 )
 
+func InitRedis() *redis.Client {
 
-func InitRedis() *redis.Client{
+	log.Println(os.Getenv("REDIS_URL"), os.Getenv("REDIS_PASSWORD"))
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr: os.Getenv("REDIS_URL"),
+		Addr:     os.Getenv("REDIS_URL"),
 		Password: os.Getenv("REDIS_PASSWORD"),
-		DB: 0,
+		DB:       0,
 	})
 
 	_, err := RedisClient.Ping(ctx).Result()

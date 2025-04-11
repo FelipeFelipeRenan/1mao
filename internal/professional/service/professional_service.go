@@ -125,7 +125,23 @@ func (s *professionalService) GetProfessionalByID(id uint) (*domain.Professional
 
 // 🔹 Buscar todos os profissionais
 func (s *professionalService) GetAllProfessionals() ([]domain.Professional, error) {
-	return s.repo.GetAllProfessionals()
+	const cacheKey = "professional:all"
+	var professionals []domain.Professional
+
+	// tenta obter do cache
+	if s.getFromCache(cacheKey, &professionals) {
+		return professionals, nil
+	}
+
+	// obtem do banco de dados principal
+	professionals, err := s.repo.GetAllProfessionals()
+	if err != nil {
+		return nil, err
+	}
+
+	// atualiza cache
+	s.setCache(cacheKey, professionals)
+	return professionals, nil
 }
 
 // 🔹 Implementação do Login usando AuthService
