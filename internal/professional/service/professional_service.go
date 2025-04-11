@@ -6,6 +6,7 @@ import (
 	"1mao/pkg/auth"
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -79,7 +80,7 @@ func (s *professionalService) setCache(key string, value interface{}) error {
 	return s.cache.Set(ctx, key, serialized, s.cacheTTL).Err()
 }
 
-func (s *professionalService) invalidateCache(pattern string){
+func (s *professionalService) invalidateCache(pattern string) {
 	keys, err := s.cache.Keys(ctx, pattern).Result()
 	if err == nil {
 		s.cache.Del(ctx, keys...)
@@ -93,12 +94,33 @@ func (s *professionalService) Register(professional *domain.Professional) error 
 		return err
 	}
 	professional.Password = string(hashedPassword)
-	return s.repo.Create(professional)
+	err = s.repo.Create(professional)
+	if err == nil {
+		s.invalidateCache("professionals:*")
+	}
+	return err
 }
 
 // 🔹 Buscar profissional por ID
 func (s *professionalService) GetProfessionalByID(id uint) (*domain.Professional, error) {
-	return s.repo.FindByID(id)
+	cacheKey := fmt.Sprintf("professional:%d", id)
+
+	var professional *domain.Professional
+
+	// Tenta obter do cache
+	if s.getFromCache(cacheKey, &professional) {
+		return professional, nil
+	}
+
+	// Obter do banco de dados principal
+	professional, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	// atualiza cache
+	s.setCache(cacheKey, professional)
+
+	return professional, nil
 }
 
 // 🔹 Buscar todos os profissionais
