@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Rotas para modulo de chat em tempo real
 func RegisterChatRoutes(r *mux.Router, db *gorm.DB, hub *websocket.Hub) {
 	r.HandleFunc("/ws/chat/{type}/{id}", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandleChatWebSocket(w, r, db, hub)

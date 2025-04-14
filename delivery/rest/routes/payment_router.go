@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Rotas parar modulo de pagamentos
 func PaymentRoutes(r *mux.Router, paymentService *service.PaymentService) {
 	handler := httpa.NewPaymentHandler(*paymentService)
 

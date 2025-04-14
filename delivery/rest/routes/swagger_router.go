@@ -9,7 +9,7 @@ import (
 
 )
 
-
+// Rotas para documentação gerada pelo Swagger(swaggo)
 func SwaggerRouter(router *mux.Router){
 
 	router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
