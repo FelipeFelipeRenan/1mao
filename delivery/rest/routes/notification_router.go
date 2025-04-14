@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Rota para notificação
 func RegisterNotificationRoutes(r *mux.Router) {
 	r.HandleFunc("/ws/notifications", handlers.HandleNotificationWebSocket)
 }

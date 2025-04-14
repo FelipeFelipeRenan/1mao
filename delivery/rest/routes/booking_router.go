@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Rotas para Agendamentos
 func BookingRoutes(r *mux.Router, bookingService service.BookingService) {
     handler := handlers.NewBookingHandler(bookingService)
 

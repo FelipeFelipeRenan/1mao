@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Rotas para checagem de saude do sistema
 func HealthRoutes(r *mux.Router, db *gorm.DB) {
 	healthHandler := handlers.NewHealthHandler(db)
 

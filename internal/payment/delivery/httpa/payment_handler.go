@@ -24,6 +24,15 @@ func NewPaymentHandler(paymentService service.PaymentService) *PaymentHandler {
 	}
 }
 
+// GetProfile godoc
+//	@Summary		Criar pagamentos
+//	@Description	Cria um pagamento para determinado cliente baseado no agendamento
+//	@Tags			Payments
+// @Security ApiKeyAuth
+// @Param   Authorization   header  string  true  "Token de autenticação (Bearer token)"//	@Produce		json
+//	@Success		200	{object}	dtos.CreatePaymentRequest
+//	@Failure		401	{object}	map[string]string	"Não autorizado"
+//	@Router			/clients/{client_id}/payments" [post]
 func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	clientID := vars["client_id"]
