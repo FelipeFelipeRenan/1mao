@@ -35,7 +35,7 @@ services:
       - redis_data:/data
   app:
     build: .
-    container_name: 1mao_app
+   # container_name: 1mao_app
     restart: always
     depends_on:
       redis:
@@ -44,13 +44,22 @@ services:
         condition: service_healthy
     env_file:
       - .env
-    ports:
-      - "${APP_PORT}:8080"
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - backend
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"  # Expõe a porta 80 do host para o Nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf  # Config do Nginx
+    depends_on:
+      - app
     networks:
       - backend
 
