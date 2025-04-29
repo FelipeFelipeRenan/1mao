@@ -1,21 +1,74 @@
-# 1mao
-This is the official 1mao repo
+# 1Mão - Plataforma de Orquestração de Serviços
 
+**1Mão** é uma plataforma robusta e escalável desenvolvida em Go, destinada à orquestração de microsserviços com foco em desempenho, modularidade e comunicação em tempo real.
 
-## How to run
+## 🧩 Arquitetura Modular
 
+A estrutura modular do projeto segue o padrão de separação de responsabilidades por domínio:
 
-### Optional
+- `cmd/`: ponto de entrada da aplicação.
+- `config/`: configurações de banco de dados e cache.
+- `delivery/rest/`: handlers e rotas REST.
+- `internal/`: lógica de domínio, serviços, repositórios e middleware organizados por contexto (ex: `booking`, `client`, `payment`).
+- `pkg/`: bibliotecas reutilizáveis, como autenticação e cache.
 
-If you want to use Swagger documentation
+## 🔐 Autenticação JWT
 
-Fist install swag utilitary using 
-```go install github.com/swaggo/swag/cmd/swag@latest```
+A autenticação é feita com tokens JWT, com suporte a middlewares para controle de acesso e segurança.
 
-After the successful instalation fo Swag, run the command to generate the swagger documentation 
+## 🔄 Comunicação em Tempo Real
 
-```swag init -g cmd/main.go```
+Utilizamos WebSockets no módulo de notificações para garantir uma comunicação bidirecional entre clientes e profissionais em tempo real.
 
-Run the command ```docker compose up --build``` to build and run the application
+## 📦 Integrações
 
-access the url [link](http://localhost:8080/swagger/index.html) to use Swagger documentation endpoints
+- **Stripe**: Processamento de pagamentos.
+- **Redis**: Cache e controle de sessão.
+- **Swagger**: Documentação interativa da API.
+
+## 🚀 Executando o Projeto
+
+### Pré-requisitos
+
+- Docker & Docker Compose
+- Go 1.21+
+
+### Subindo com Docker
+
+```bash
+docker-compose up --build
+```
+
+### Acessando a API
+
+- `http://localhost:8080/api`
+- Swagger: `http://localhost:8080/swagger/index.html`
+
+## 🧪 Testes
+
+```bash
+go test ./...
+```
+
+## 📁 Documentação
+
+A documentação OpenAPI/Swagger pode ser encontrada em:
+
+- `docs/swagger.yaml`
+- `docs/swagger.json`
+
+## 📂 Workflows
+
+CI configurado com GitHub Actions: `.github/workflows/go.yml`
+
+## 🤝 Contribuindo
+
+1. Fork o repositório
+2. Crie sua branch (`git checkout -b feature/nome-feature`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova feature'`)
+4. Push para o branch (`git push origin feature/nome-feature`)
+5. Abra um Pull Request
+
+---
+
+**1Mão** © 2025 - Plataforma de Orquestração com Go 🚀
