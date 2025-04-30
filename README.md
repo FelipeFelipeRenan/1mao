@@ -50,6 +50,20 @@ docker-compose up --build
 go test ./...
 ```
 
+## Teste de chat com WebSocket
+
+Utilize um utilitário para conexões websocket, como o wscat
+
+```bash
+wscat -c ws://localhost/ws/chat/<tipo de remetente>/<id do remetente>
+```
+
+Ao entrar na interface do wscat, utilize
+```bash
+{"receiver_id":<id do destinatario>,"receiver_type":"<tipo do destinatário>","content":"mensagem a ser enviada"}
+```
+
+
 ## 📁 Documentação
 
 A documentação OpenAPI/Swagger pode ser encontrada em:
