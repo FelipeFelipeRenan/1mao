@@ -39,16 +39,16 @@ Utilizamos WebSockets no módulo de notificações para garantir uma comunicaç�
 docker-compose up --build
 ```
 
-### Acessando a API
-
-- `http://localhost:8080/api`
-- Swagger: `http://localhost:8080/swagger/index.html`
-
-## 🧪 Testes
+## 🧪 Testes unitários
 
 ```bash
 go test ./...
 ```
+
+### Acessando a API
+
+- `http://localhost:8080/api`
+- Swagger: `http://localhost/swagger/index.html`
 
 ## Teste de chat com WebSocket
 
